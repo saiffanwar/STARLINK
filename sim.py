@@ -1,4 +1,5 @@
 import math
+from tkinter import *
 from turtle import *
 from vpython import *
 import numpy as np
@@ -42,8 +43,10 @@ phase1_mass = 250
 #     rate(100)
 
 phis = np.linspace(-(math.pi),(math.pi),20)
+phis2 = np.linspace((math.pi),2*(math.pi),20)
 print(phis)
 for i in phis:
     print(i)
-    x, y, z = polar2cart(earth_radius+2000, math.pi/2, i)
-    satellite(x,y,z)
+    for j in phis2:
+        x, y, z = polar2cart(earth_radius+2000, j, i)
+        satellite(x,y,z)
