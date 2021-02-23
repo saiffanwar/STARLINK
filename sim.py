@@ -42,9 +42,6 @@ def orbit(sats):
         for object in sats:
             rate(10000)
             force_gravity = -G*earth.mass*object.mass/(mag(object.pos-earth.pos)**2)*norm(object.pos-earth.pos)
-            # if t%1000 == 0:
-            #     print(t, object.velocity, object.pos) 
-            #Update the acceleration, velocity, and postion of the satellite
             object.acceleration = force_gravity/object.mass
 
             object.velocity=object.velocity+object.acceleration*dt
@@ -56,22 +53,21 @@ def orbit(sats):
 def plane(object, no_of_sats):
     plane_sats = []
     force_gravity = vector(0,0,0)
-    force_satellite = vector(0,0,0)
     t = 0
-    dt = 0.1
+    dt = 0.5
     intervals = np.linspace(0,6475,no_of_sats+1)
     pos = object.pos
     velocity = object.velocity
     acceleration = object.acceleration
     mass = object.mass
     coords = [pos.x, pos.y, pos.z]
-    positions = [[coords, velocity]]
-
+    intervals = np.linspace(0,6475,no_of_sats+1)
+    positions = []
     while t<6475:
+        pos=pos+velocity*dt
         force_gravity = -G*earth.mass*mass/(mag(pos-earth.pos)**2)*norm(pos-earth.pos)
         acceleration = force_gravity/mass
         velocity=velocity+acceleration*dt
-        pos=pos+velocity*dt
         if np.round(t,1) in intervals[:-1]:
             coords = [pos.x, pos.y, pos.z]
             positions.append([coords, velocity])
@@ -85,25 +81,23 @@ def plane(object, no_of_sats):
     return plane_sats
 
 # PHASE 1
-thetas = np.linspace(0,360,33)
-thetas = thetas[:-1]
+def phase(no_of_planes, sats_per_plane, inclination, altitude):
+    thetas = np.linspace(0,360,no_of_planes+1)
+    thetas = thetas[:-1]
+    sats = []
+    for i in thetas:
+        coords = polar2cart(earth_radius+altitude, i*math.pi/180, (inclination/180)*math.pi)
+        x, y, z = coords
+        if z <0:
+            velocity = -7.3E3*norm(hat(vector(1,0,(-x/z))))
+        else:
+            velocity = 7.3E3*norm(hat(vector(1,0,(-x/z))))
+        initial_sat = plot_satellite(coords, velocity)
+        initial_sat.visible = False
+        plane_sats = plane(initial_sat,sats_per_plane)
+        for j in plane_sats:
+            sats.append(j)
+    return sats
 
-
-inclination = 53
-sats = []
-iter=0
-y_old = 0
-for i in thetas:
-    coords = polar2cart(earth_radius+1150E3, i*math.pi/180, (inclination/180)*math.pi)
-    x, y, z = coords
-    if z <0:
-        velocity = -7.3E3*norm(hat(vector(1,0,(-x/z))))
-    else:
-        velocity = 7.3E3*norm(hat(vector(1,0,(-x/z))))
-    initial_sat = plot_satellite(coords, velocity)
-    plane_sats = plane(initial_sat,50)
-    for j in plane_sats:
-        sats.append(j)
-
-# orbit(sats)
-
+sats = phase(32, 50, 53, 1150E3)
+orbit(sats)
