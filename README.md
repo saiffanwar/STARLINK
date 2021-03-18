@@ -27,3 +27,4 @@ Then run sim.py with python3:
         python3 sim.py
 
 ![](./current.png)
+<img src="./groundtrack.png" alt="10" style="zoom:120%;" />

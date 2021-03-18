@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 import csv
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = 0
-
+from app import dashplot
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
      width=1200, height=1200,
@@ -105,9 +105,9 @@ def plane(object, no_of_sats, period):
     # print(longitudes[0:100], latitudes[0:100])
 
     # plot_track(latitudes, longitudes)
-    with open('plane.csv','w+') as file:
-        writer = csv.writer(file, delimiter = ',')
-        writer.writerows(geopos)
+    # with open('plane.csv','w+') as file:
+    #     writer = csv.writer(file, delimiter = ',')
+    #     writer.writerows(geopos)
     # pck.dump([latitudes, longitudes], file)
     return plane_sats, latitudes, longitudes
 
@@ -116,6 +116,8 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude):
     thetas = thetas[:-1]
     sats = []
     planes = []
+    all_latitudes = []
+    all_longitudes = []
     period = (np.sqrt((4*(math.pi**2)*((altitude+earth.radius)**3))/(G*earth.mass)))
     for i in thetas:
         coords = polar2cart(earth_radius+altitude, rad(i), rad(inclination))
@@ -130,15 +132,18 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude):
         initial_sat.visible = False
         plane_sats, latitudes, longitudes = plane(initial_sat,sats_per_plane, period)
         planes.append([latitudes, longitudes])
-    
+        all_latitudes.append(latitudes)
+        all_longitudes.append(longitudes)    
         for j in plane_sats:
             sats.append(j)
-    plot_track(planes)
+    with open('planes.pck', 'wb') as f:
+        pck.dump([all_latitudes, all_longitudes], f)
+    dashplot(all_latitudes, all_longitudes)
     return sats
 
 #All LEO satellites
 
-phase_sats1 = phase(32, 50, 53, 1150E3)
+phase_sats1 = phase(4, 50, 53, 1150E3)
 # print('part 1 plotted')
 # phase_sats1 = phase_sats1[0::50]
 # phase_sats2 = phase(32, 50, 53.8, 1100E3)
@@ -188,7 +193,7 @@ def coord_plane(theta, phi):
     plane_sats = plane(initial_sat,20, period)
 
 
-coord_plane(0, 53)
+# coord_plane(0, 53)
 
 # coord_plane(0,50)
 

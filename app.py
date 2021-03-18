@@ -1,45 +1,37 @@
-import plotly.graph_objects as go
-
+import plotly.express as px
+import geopandas as gpd
+import shapely.geometry
 import numpy as np
+import wget
 
-# Generate curve data
-t = np.linspace(-1, 1, 100)
-x = t + t ** 2
-y = t - t ** 2
-xm = np.min(x) - 1.5
-xM = np.max(x) + 1.5
-ym = np.min(y) - 1.5
-yM = np.max(y) + 1.5
-N = 1000
-s = np.linspace(-1, 1, N)
-xx = s + s ** 2
-yy = s - s ** 2
+# download a zipped shapefile
+wget.download("https://plotly.github.io/datasets/ne_50m_rivers_lake_centerlines.zip")
 
+# open a zipped shapefile with the zip:// pseudo-protocol
+geo_df = gpd.read_file("zip://ne_50m_rivers_lake_centerlines.zip")
 
-# Create figure
-fig = go.Figure(
-    data=[go.Scatter(x=x, y=y,
-                     mode="lines",
-                     line=dict(width=2, color="blue")),
-          go.Scatter(x=x, y=y,
-                     mode="lines",
-                     line=dict(width=2, color="blue"))],
-    layout=go.Layout(
-        xaxis=dict(range=[xm, xM], autorange=False, zeroline=False),
-        yaxis=dict(range=[ym, yM], autorange=False, zeroline=False),
-        title_text="Kinematic Generation of a Planar Curve", hovermode="closest",
-        updatemenus=[dict(type="buttons",
-                          buttons=[dict(label="Play",
-                                        method="animate",
-                                        args=[None])])]),
-    frames=[go.Frame(
-        data=[go.Scatter(
-            x=[xx[k]],
-            y=[yy[k]],
-            mode="markers",
-            marker=dict(color="red", size=10))])
+def dashplot(allats, alllongs):
+    lats = []
+    lons = []
+    names = []
 
-        for k in range(N)]
-)
-
-fig.show()
+    for feature, name in zip(geo_df.geometry, geo_df.name):
+        if isinstance(feature, shapely.geometry.linestring.LineString):
+            linestrings = [feature]
+        elif isinstance(feature, shapely.geometry.multilinestring.MultiLineString):
+            linestrings = feature.geoms
+        else:
+            continue
+        for linestring in linestrings:
+            x, y = linestring.xy
+            lats = np.append(lats, y)
+            lons = np.append(lons, x)
+            names = np.append(names, [name]*len(y))
+            lats = np.append(lats, None)
+            lons = np.append(lons, None)
+            names = np.append(names, None)
+    # print('                 ')
+    # print(len(lons), len(lons))
+    # print(lats[0], lons[0])
+    fig = px.line_geo(lat=lats, lon=lons)
+    fig.show()

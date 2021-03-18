@@ -15,12 +15,14 @@ lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
 lamp = local_light(pos=vector(1E10,-1E10,-0),color=color.white)
 
 
-def plot_track(planes):
+def plot_track(latitudes, longitudes):
     img = plt.imread('mercator.jpg')
     fig, ax = plt.subplots()
     ax.imshow(img, extent = [-180,180,-90,90])
-    for x, y in planes:
-        ax.scatter(x,y, s=0.25)
+    
+    # for x, y in planes:
+    ax.scatter(latitudes, longitudes, s=0.01, color='red')
+    fig.tight_layout()
     fig.savefig('groundtrack.pdf')
     plt.show()
 
