@@ -35,7 +35,7 @@ G = 6.673E-11
 
 def plot_satellite(coords, velocity=0):
     x, y, z = coords
-    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=color.hsv_to_rgb(vector (0.5,1,0.8)))
+    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=color.red)
 
     # satellite = box(pos=vector(x,y,z), width = 250E2, height = 250E2, length = 250E2, color=color.white)
 
@@ -133,26 +133,16 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
             
     with open('planes'+str(section)+'.pck', 'wb') as f:
         pck.dump([all_longitudes, all_latitudes, section, all_initial_pos], f)
-    # plotly()
     return sats
 
 #All LEO satellites
 
 phase_sats1 = phase(32, 50, 53, 1150E3, 1)
-# print('part 1 plotted')
-# phase_sats1 = phase_sats1[0::50]
-phase_sats2 = phase(4, 50, 53.8, 1100E3, 2)
-# print('part 2 plotted')
-# # phase_sats2 = phase_sats2[0::50]
-phase_sats3 = phase(8, 50, 74, 1130E3, 3)
-# print('part 3 plotted')
-# # phase_sats3 = phase_sats3[0::50]
-phase_sats4 = phase(5, 75, 81, 1275E3, 4)
-# print('part 4 plotted')
-# # phase_sats4 = phase_sats4[0::75]
-phase_sats5 = phase(6, 75, 70, 1325E3, 5)
-# print('part 5 plotted')
-# phase_sats5 = phase_sats5[0::75]
+# plotly()
+# phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
+# phase_sats3 = phase(8, 50, 74, 1130E3, 3)
+# phase_sats4 = phase(5, 75, 81, 1275E3, 4)
+# phase_sats5 = phase(6, 75, 70, 1325E3, 5)
 
 # threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats2, 1100E3)).start()

@@ -61,4 +61,5 @@ def cart2geo(x, y, z):
     # print(x,y,z)
     r, theta, phi = cart2polar(x, y, z)
     longitude, latitude = polar2geo(r, theta, phi,x,y,z)
-    return longitude, latitude
+    return np.round(longitude,2), np.round(latitude
+,2)
