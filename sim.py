@@ -67,7 +67,7 @@ def orbit(sats, altitude, run_rate=1):
             object.orbit.append(pos=object.pos)
         t=t+dt
 
-def plane(object, no_of_sats, period):
+def plane(object, no_of_sats, period, plane_number, total_planes):
     plane_sats = []
     force_gravity = vector(0,0,0)
     t = 0
@@ -78,12 +78,14 @@ def plane(object, no_of_sats, period):
     mass = object.mass
     coords = [pos.x, pos.y, pos.z]
     intervals = np.around(np.linspace(0,period,no_of_sats+1), precision)
+    intervals = [interval+(20*plane_number) for interval in intervals]
+    print(len(intervals))
     positions = []
     latitudes = []
     longitudes = []
     starting_positions = []
 
-    while t<period:
+    while t<period+20*total_planes:
         t = np.round(t, 2)
         pos=pos+velocity*dt
         force_gravity = -G*earth.mass*mass/(mag(pos-earth.pos)**2)*norm(pos-earth.pos)
@@ -112,9 +114,10 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
     all_longitudes = []
     all_initial_pos = []
     period = (np.sqrt((4*(math.pi**2)*((altitude+earth.radius)**3))/(G*earth.mass)))
-    
-    for i in thetas:
-        coords = polar2cart(earth_radius+altitude, rad(i), rad(inclination))
+    satellite_separation = period/sats_per_plane
+
+    for i in range(0,len(thetas)):
+        coords = polar2cart(earth_radius+altitude, rad(thetas[i]), rad(inclination))
         x, y, z = coords
         speed = np.sqrt((G*earth.mass)/(earth_radius+altitude))
         if z <0:
@@ -123,7 +126,8 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
             velocity = speed*norm(hat(vector(1,0,(-x/z))))
         initial_sat = plot_satellite(coords, velocity)
         initial_sat.visible = False
-        plane_sats, longitudes, latitudes, starting_positions = plane(initial_sat,sats_per_plane, period)
+        plane_sats, longitudes, latitudes, starting_positions = plane(initial_sat,sats_per_plane, period, i, no_of_planes)
+        print(len(plane_sats))
         all_latitudes.append(latitudes)
         all_longitudes.append(longitudes) 
         all_initial_pos.append(starting_positions)
@@ -138,7 +142,6 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
 #All LEO satellites
 
 phase_sats1 = phase(32, 50, 53, 1150E3, 1)
-# plotly()
 # phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
 # phase_sats3 = phase(8, 50, 74, 1130E3, 3)
 # phase_sats4 = phase(5, 75, 81, 1275E3, 4)
