@@ -23,7 +23,8 @@ def createdf(file):
             all_cycles_lats.append(plane_cycle_lats)
         print(len(all_cycles_lons[0][0]))
         df = pd.DataFrame(
-                {'Longitudes': all_cycles_lons,
+                {'OrbitalPath': zip(longitudes, latitudes),
+                'Longitudes': all_cycles_lons,
                 'Latitudes': all_cycles_lats
                 }
         )
@@ -31,7 +32,7 @@ def createdf(file):
 
 colourdict = {1 : 'red', 2 : 'green', 3: 'orange', 4: 'purple', 5: 'teal'}
 
-df = createdf('planes1.pck')
+df = createdf('data/planes1.pck')
 longitudes = df['Longitudes']
 latitudes = df['Latitudes']
 t = np.linspace(-1, 1, 100)
@@ -59,9 +60,9 @@ fig = go.Figure(
 
         frames=[go.Frame(
         data=[go.Scatter(
-        x=np.array([xi[k] for i in range(0,32) for xi in x[i]]).flatten(),
+        x=np.array([xi[k] for i in range(0,len(x)) for xi in x[i]]).flatten(),
 
-        y=np.array([yi[k] for i in range(0,32) for yi in y[i]]).flatten(),
+        y=np.array([yi[k] for i in range(0,len(x)) for yi in y[i]]).flatten(),
         mode="markers",
         marker=dict(color="red", size=5))])
                 
@@ -84,7 +85,7 @@ fig.add_layout_image(
 fig.update_layout(template="plotly_white")#, transition={'duration': 10})
 
 for j in range(1,2):
-        df = createdf('planes'+str(j)+'.pck')
+        df = createdf('data/planes'+str(j)+'.pck')
         longitudes = df['Longitudes']
         latitudes = df['Latitudes']
         x = longitudes

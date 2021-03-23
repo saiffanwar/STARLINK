@@ -16,8 +16,8 @@ colourdict = {1 : 'red', 2 : 'green', 3: 'orange', 4: 'purple', 5: 'teal'}
 def plotly():
 
         fig = make_subplots(rows=1, cols=1)
-        for i in range(1,2):
-                with open('planes'+str(i)+'.pck', 'rb') as f:
+        for i in range(1,6):
+                with open('data/planes'+str(i)+'.pck', 'rb') as f:
                         longitudes, latitudes, section, starting_positions  = pck.load(f)
 
                 for longs, lats in zip(longitudes, latitudes):
@@ -55,7 +55,7 @@ def plotly():
         fig.show()
         
 
-# plotly() 
+plotly() 
 
 def createdf():
         with open('planes1.pck', 'rb') as f:

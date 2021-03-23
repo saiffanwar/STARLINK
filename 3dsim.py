@@ -10,7 +10,7 @@ from geometry import *
 import pickle as pck
 from matplotlib import pyplot as plt
 import csv
-from app import *
+# from app import *
 
 
 
@@ -79,7 +79,6 @@ def plane(object, no_of_sats, period, plane_number, total_planes):
     coords = [pos.x, pos.y, pos.z]
     intervals = np.around(np.linspace(0,period,no_of_sats+1), precision)
     intervals = [interval+(20*plane_number) for interval in intervals]
-    print(len(intervals))
     positions = []
     latitudes = []
     longitudes = []
@@ -127,7 +126,6 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
         initial_sat = plot_satellite(coords, velocity)
         initial_sat.visible = False
         plane_sats, longitudes, latitudes, starting_positions = plane(initial_sat,sats_per_plane, period, i, no_of_planes)
-        print(len(plane_sats))
         all_latitudes.append(latitudes)
         all_longitudes.append(longitudes) 
         all_initial_pos.append(starting_positions)
@@ -135,17 +133,17 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
         for j in plane_sats:
             sats.append(j)
             
-    with open('planes'+str(section)+'.pck', 'wb') as f:
+    with open('data/planes'+str(section)+'.pck', 'wb') as f:
         pck.dump([all_longitudes, all_latitudes, section, all_initial_pos], f)
     return sats
 
 #All LEO satellites
 
 phase_sats1 = phase(32, 50, 53, 1150E3, 1)
-# phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
-# phase_sats3 = phase(8, 50, 74, 1130E3, 3)
-# phase_sats4 = phase(5, 75, 81, 1275E3, 4)
-# phase_sats5 = phase(6, 75, 70, 1325E3, 5)
+phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
+phase_sats3 = phase(8, 50, 74, 1130E3, 3)
+phase_sats4 = phase(5, 75, 81, 1275E3, 4)
+phase_sats5 = phase(6, 75, 70, 1325E3, 5)
 
 # threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats2, 1100E3)).start()
