@@ -29,7 +29,11 @@ def createdf(file):
         )
         return df
 
-colourdict = {1 : 'red', 2 : 'green', 3: 'orange', 4: 'purple', 5: 'teal'}
+colourdict = {1 : ['red', [255, 0, 0] ], 
+                2 : ['green', [0, 255, 0]], 
+                3: ['orange', [255, 165, 0]], 
+                4: ['purple', [128, 0, 128]], 
+                5: ['hotpink', [255, 105, 180]]}
 
 def init_plot():
         df = createdf('data/planes1.pck')
@@ -105,7 +109,7 @@ def init_plot():
                         fig.add_trace( 
                         go.Scattergeo(lon= longs, lat= lats, 
                                         mode='lines',
-                                        line=dict(width=1, color=colourdict[j]), 
+                                        line=dict(width=1, color=colourdict[j][0]), 
                                         name='Section '+str(j)
                                         ))
                         fig.add_trace(
@@ -114,7 +118,7 @@ def init_plot():
 
                                 lat=np.array([yi[0] for i in range(0,len(x)) for yi in y[i]]).flatten(),
                                 mode="markers",
-                                marker=dict(color=colourdict[j], size=5)))
+                                marker=dict(color=colourdict[j][0], size=5)))
         
         fig.show()
         

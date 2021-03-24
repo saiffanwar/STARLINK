@@ -11,7 +11,7 @@ import pickle as pck
 from matplotlib import pyplot as plt
 import csv
 # from app import *
-
+from flatsim import *
 
 
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
@@ -24,7 +24,7 @@ canvas(title='STARLINK',
 # distant_light(direction=vector(-1E10,1E10,-1E10), color=color.white)
 # distant_light(direction=vector(1E10,-0,1E10), color=color.white)
 lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
-lamp = local_light(pos=vector(1E10,-1E10,-0),color=color.white)
+# lamp = local_light(pos=vector(1E10,-1E10,-0),color=color.white)
 
 ######### PHYSICAL PARAMETER SETUP #########
 earth_radius = 6.37E6
@@ -33,16 +33,16 @@ earth.mass = 6E24
 G = 6.673E-11
 
 
-def plot_satellite(coords, velocity=0):
+def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     x, y, z = coords
-    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=color.red)
+    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
 
     # satellite = box(pos=vector(x,y,z), width = 250E2, height = 250E2, length = 250E2, color=color.white)
 
     satellite.mass = 250
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
-    satellite.orbit = curve(color=color.green, radius=10E3)    
+    # satellite.orbit = curve(color=color.green, radius=10E3)    
 
     return satellite
 
@@ -67,7 +67,7 @@ def orbit(sats, altitude, run_rate=1):
             object.orbit.append(pos=object.pos)
         t=t+dt
 
-def plane(object, no_of_sats, period, plane_number, total_planes):
+def plane(object, no_of_sats, period, plane_number, total_planes, section):
     plane_sats = []
     force_gravity = vector(0,0,0)
     t = 0
@@ -83,7 +83,7 @@ def plane(object, no_of_sats, period, plane_number, total_planes):
     latitudes = []
     longitudes = []
     starting_positions = []
-
+    orbit = []
     while t<period+20*total_planes:
         t = np.round(t, 2)
         pos=pos+velocity*dt
@@ -91,6 +91,7 @@ def plane(object, no_of_sats, period, plane_number, total_planes):
         acceleration = force_gravity/mass
         velocity=velocity+acceleration*dt
         coords = [pos.x, pos.y, pos.z]
+        orbit.append(pos)
         longitude, latitude = cart2geo(pos.x, pos.y, pos.z)
         longitudes.append(longitude)
         latitudes.append(latitude)
@@ -101,8 +102,10 @@ def plane(object, no_of_sats, period, plane_number, total_planes):
         t=t+dt
     for j in positions:
         pos = j[0]
-        sat = plot_satellite(j[0], j[1])
+        sat = plot_satellite(j[0], j[1], colourdict[section][1])
         plane_sats.append(sat)
+    c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=50E2)
+    [c.append(x) for x in orbit]
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
@@ -125,7 +128,7 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
             velocity = speed*norm(hat(vector(1,0,(-x/z))))
         initial_sat = plot_satellite(coords, velocity)
         initial_sat.visible = False
-        plane_sats, longitudes, latitudes, starting_positions = plane(initial_sat,sats_per_plane, period, i, no_of_planes)
+        plane_sats, longitudes, latitudes, starting_positions = plane(initial_sat,sats_per_plane, period, i, no_of_planes, section)
         all_latitudes.append(latitudes)
         all_longitudes.append(longitudes) 
         all_initial_pos.append(starting_positions)
@@ -145,6 +148,7 @@ phase_sats3 = phase(8, 50, 74, 1130E3, 3)
 phase_sats4 = phase(5, 75, 81, 1275E3, 4)
 phase_sats5 = phase(6, 75, 70, 1325E3, 5)
 
+init_plot()
 # threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats2, 1100E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats3, 1130E3)).start()
