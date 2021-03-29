@@ -19,8 +19,8 @@ precision = -1
 
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
-     width=1200, height=1200,
-     center=vector(0,0,0), background=color.black)
+     width=1500, height=1500,
+     center=vector(0,0,0), background=vector(40/255, 44/255, 51/255))
 # distant_light(direction=vector(-1E10,1E10,-1E10), color=color.white)
 # distant_light(direction=vector(1E10,-0,1E10), color=color.white)
 lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
@@ -42,7 +42,7 @@ def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     satellite.mass = 250
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
-    # satellite.orbit = curve(color=color.green, radius=10E3)    
+    satellite.orbit = curve(color=color.green, radius=10E3)    
 
     return satellite
 
@@ -69,6 +69,7 @@ def orbit(sats, altitude, run_rate=1):
 
 def plane(object, no_of_sats, period, plane_number, total_planes, section):
     plane_sats = []
+    phase_offset = 0/32 * (period/no_of_sats)
     force_gravity = vector(0,0,0)
     t = 0
     dt = 10**(-precision)
@@ -78,13 +79,13 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
     mass = object.mass
     coords = [pos.x, pos.y, pos.z]
     intervals = np.around(np.linspace(0,period,no_of_sats+1), precision)
-    intervals = [interval+(20*plane_number) for interval in intervals]
+    intervals = [interval+(phase_offset*plane_number) for interval in intervals]
     positions = []
     latitudes = []
     longitudes = []
     starting_positions = []
     orbit = []
-    while t<period+20*total_planes:
+    while t<period+phase_offset*total_planes:
         t = np.round(t, 2)
         pos=pos+velocity*dt
         force_gravity = -G*earth.mass*mass/(mag(pos-earth.pos)**2)*norm(pos-earth.pos)
@@ -110,6 +111,8 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
 
 def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
     thetas = np.linspace(0,360,no_of_planes+1)
+    if section ==2:
+        thetas = np.linspace((360/no_of_planes)/2,360+ (360/no_of_planes)/2,no_of_planes+1)
     thetas = thetas[:-1]
     sats = []
     all_latitudes = []
@@ -119,7 +122,7 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
     satellite_separation = period/sats_per_plane
 
     for i in range(0,len(thetas)):
-        coords = polar2cart(earth_radius+altitude, rad(thetas[i]), rad(inclination))
+        coords = polar2cart(earth_radius+altitude, rad(thetas[i]), rad(90-inclination))
         x, y, z = coords
         speed = np.sqrt((G*earth.mass)/(earth_radius+altitude))
         if z <0:
@@ -140,6 +143,17 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
         pck.dump([all_longitudes, all_latitudes, section, all_initial_pos], f)
     return sats
 
+def plot_equator():
+    equator = []
+    for theta in np.arange(0,360,1):
+        x = (earth_radius+100)*math.cos(rad(theta))
+        y = (earth_radius+100)*math.sin(rad(theta))
+        equator.append(vector(x,0,y))
+    print(equator)
+    c = curve(color=color.blue, radius=100E2)
+    [c.append(x) for x in equator]
+
+plot_equator()
 #All LEO satellites
 
 phase_sats1 = phase(32, 50, 53, 1150E3, 1)
@@ -148,7 +162,7 @@ phase_sats3 = phase(8, 50, 74, 1130E3, 3)
 phase_sats4 = phase(5, 75, 81, 1275E3, 4)
 phase_sats5 = phase(6, 75, 70, 1325E3, 5)
 
-init_plot()
+# init_plot(1)
 # threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats2, 1100E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats3, 1130E3)).start()
