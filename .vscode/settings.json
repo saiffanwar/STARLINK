@@ -1,4 +1,7 @@
 {
-    "python.pythonPath": "/Users/saif/STARLINK/venv/bin/python3.9",
-    "python.formatting.provider": "black"
+    "terminal.integrated.env.osx": {
+        "PATH": ""
+    },
+    "python.formatting.provider": "black",
+    "python.pythonPath": "/Users/saif/STARLINK/venv/bin/python"
 }

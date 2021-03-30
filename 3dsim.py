@@ -8,18 +8,17 @@ import threading
 import threading
 from geometry import *
 import pickle as pck
-from matplotlib import pyplot as plt
 import csv
 # from app import *
 from flatsim import *
 
 
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
-precision = -1
+precision = 1
 
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
-     width=1500, height=1500,
+     width=1000, height=1500,
      center=vector(0,0,0), background=vector(40/255, 44/255, 51/255))
 # distant_light(direction=vector(-1E10,1E10,-1E10), color=color.white)
 # distant_light(direction=vector(1E10,-0,1E10), color=color.white)
@@ -31,7 +30,6 @@ earth_radius = 6.37E6
 earth = sphere(pos=vector(0,0,0), radius = earth_radius, texture = textures.earth)
 earth.mass = 6E24
 G = 6.673E-11
-
 
 def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     x, y, z = coords
@@ -69,7 +67,7 @@ def orbit(sats, altitude, run_rate=1):
 
 def plane(object, no_of_sats, period, plane_number, total_planes, section):
     plane_sats = []
-    phase_offset = 0/32 * (period/no_of_sats)
+    phase_offset = 5/32 * (period/no_of_sats)
     force_gravity = vector(0,0,0)
     t = 0
     dt = 10**(-precision)
@@ -78,8 +76,9 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
     acceleration = object.acceleration
     mass = object.mass
     coords = [pos.x, pos.y, pos.z]
-    intervals = np.around(np.linspace(0,period,no_of_sats+1), precision)
-    intervals = [interval+(phase_offset*plane_number) for interval in intervals]
+    intervals = np.around(np.linspace(0+(phase_offset*plane_number),period+(phase_offset*plane_number),no_of_sats+1), precision)[:-1]
+    # intervals = np.around([interval+(phase_offset*plane_number) for interval in intervals], precision)
+    print(intervals)
     positions = []
     latitudes = []
     longitudes = []
@@ -96,7 +95,7 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
         longitude, latitude = cart2geo(pos.x, pos.y, pos.z)
         longitudes.append(longitude)
         latitudes.append(latitude)
-        if t in intervals[:-1]:
+        if t in intervals:
             # print(velocity)
             positions.append([coords, velocity])
             starting_positions.append([longitude, latitude])
@@ -107,6 +106,7 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
         plane_sats.append(sat)
     c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=50E2)
     [c.append(x) for x in orbit]
+    print(len(plane_sats))
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
@@ -149,18 +149,18 @@ def plot_equator():
         x = (earth_radius+100)*math.cos(rad(theta))
         y = (earth_radius+100)*math.sin(rad(theta))
         equator.append(vector(x,0,y))
-    print(equator)
+    # print(equator)
     c = curve(color=color.blue, radius=100E2)
     [c.append(x) for x in equator]
 
 plot_equator()
 #All LEO satellites
 
-phase_sats1 = phase(32, 50, 53, 1150E3, 1)
-phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
-phase_sats3 = phase(8, 50, 74, 1130E3, 3)
-phase_sats4 = phase(5, 75, 81, 1275E3, 4)
-phase_sats5 = phase(6, 75, 70, 1325E3, 5)
+phase_sats1 = phase(2, 50, 53, 1150E3, 1)
+# phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
+# phase_sats3 = phase(8, 50, 74, 1130E3, 3)
+# phase_sats4 = phase(5, 75, 81, 1275E3, 4)
+# phase_sats5 = phase(6, 75, 70, 1325E3, 5)
 
 # init_plot(1)
 # threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
