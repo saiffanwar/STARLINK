@@ -10,11 +10,18 @@ from geometry import *
 import pickle as pck
 import csv
 # from app import *
-from flatsim import *
-
-
+# from flatsim import *
+import pandas as pd
+from app import begin_dash
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
-precision = 1
+precision = -1
+
+
+colourdict = {1 : ['red', [255, 0, 0] ], 
+                2 : ['green', [0, 255, 0]], 
+                3: ['orange', [255, 165, 0]], 
+                4: ['purple', [128, 0, 128]], 
+                5: ['hotpink', [255, 105, 180]]}
 
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
@@ -51,19 +58,32 @@ def orbit(sats, altitude, run_rate=1):
     t = 0
     dt = 1
     period = (np.sqrt((4*(math.pi**2)*((altitude+earth.radius)**3))/(G*earth.mass)))
+    plane = [pos for pos in sats ]
     # while t<period:
     while True:
+        earth.rotate(rad(1/240), axis=vec(0,1,0))
         # print(t)
-        for object in sats:
+        plane_positions = []
+        for i, object in zip(np.arange(0,len(plane)), plane):
             rate(100*len(sats)*run_rate)
-            force_gravity = -G*earth.mass*object.mass/(mag(object.pos-earth.pos)**2)*norm(object.pos-earth.pos)
-            object.acceleration = force_gravity/object.mass
-
-            object.velocity=object.velocity+object.acceleration*dt
-            object.pos=object.pos+object.velocity*dt
-
-            object.orbit.append(pos=object.pos)
+            new_pos(object, dt)
+            pos = object.pos
+            plane_positions.append([pos.x, pos.y, pos.z])
+        with open('data/positions.pck', 'wb') as f:
+            pck.dump(plane_positions, f)
+        # time.sleep(1)
         t=t+dt
+
+def new_pos(object, dt):
+    force_gravity = -G*earth.mass*object.mass/(mag(object.pos-earth.pos)**2)*norm(object.pos-earth.pos)
+    object.acceleration = force_gravity/object.mass
+
+    object.velocity=object.velocity+object.acceleration*dt
+    object.pos=object.pos+object.velocity*dt
+
+    object.orbit.append(pos=object.pos)
+    return object
+
 
 def plane(object, no_of_sats, period, plane_number, total_planes, section):
     plane_sats = []
@@ -77,8 +97,6 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
     mass = object.mass
     coords = [pos.x, pos.y, pos.z]
     intervals = np.around(np.linspace(0+(phase_offset*plane_number),period+(phase_offset*plane_number),no_of_sats+1), precision)[:-1]
-    # intervals = np.around([interval+(phase_offset*plane_number) for interval in intervals], precision)
-    print(intervals)
     positions = []
     latitudes = []
     longitudes = []
@@ -106,7 +124,6 @@ def plane(object, no_of_sats, period, plane_number, total_planes, section):
         plane_sats.append(sat)
     c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=50E2)
     [c.append(x) for x in orbit]
-    print(len(plane_sats))
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
@@ -149,21 +166,21 @@ def plot_equator():
         x = (earth_radius+100)*math.cos(rad(theta))
         y = (earth_radius+100)*math.sin(rad(theta))
         equator.append(vector(x,0,y))
-    # print(equator)
     c = curve(color=color.blue, radius=100E2)
     [c.append(x) for x in equator]
 
 plot_equator()
 #All LEO satellites
 
-phase_sats1 = phase(2, 50, 53, 1150E3, 1)
+phase_sats1 = phase(5, 50, 53, 1150E3, 1)
 # phase_sats2 = phase(32, 50, 53.8, 1100E3, 2)
 # phase_sats3 = phase(8, 50, 74, 1130E3, 3)
 # phase_sats4 = phase(5, 75, 81, 1275E3, 4)
 # phase_sats5 = phase(6, 75, 70, 1325E3, 5)
 
 # init_plot(1)
-# threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
+
+threading.Thread(target=orbit, args=(phase_sats1, 1150E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats2, 1100E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats3, 1130E3)).start()
 # threading.Thread(target=orbit, args=(phase_sats4, 1275E3)).start()

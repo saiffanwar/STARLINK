@@ -3,7 +3,8 @@ import numpy as np
 from tkinter import *
 from turtle import *
 from vpython import *
-
+import pickle as pck
+import pandas as pd
 def rad(x):
     return (x*math.pi/180)
 
@@ -63,3 +64,16 @@ def cart2geo(x, y, z):
     longitude, latitude = polar2geo(r, theta, phi,x,y,z)
     return np.round(longitude,2), np.round(latitude
 ,2)
+
+def fetch_locs():
+    df = pd.DataFrame({
+        'Plane': []
+    })
+    plane_positions = pck.load(open('data/positions.pck', 'rb'))
+    longitudes = []
+    latitudes = []
+    for i in plane_positions:
+        lon, lat = cart2geo(i[0], i[1], i[2])
+        longitudes.append(lon)
+        latitudes.append(lat)
+    return longitudes, latitudes

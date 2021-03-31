@@ -5,30 +5,32 @@ import pickle as pck
 import base64
 import pandas as pd
 import plotly.io as plt_io
+import vpython
+from geometry import cart2geo
 
-def createdf(file):
-        with open(file, 'rb') as f:
-                longitudes, latitudes, section, starting_positions  = pck.load(f)
-        all_cycles_lons = []
-        all_cycles_lats = []
-        for x in range(0, len(starting_positions)):
-            plane_cycle_lons = []
-            plane_cycle_lats = []
-            for init_pos in starting_positions[x]:
-                index = longitudes[x].index(init_pos[0])
-                sat_lons = longitudes[x][index:]+longitudes[x][:index]
-                sat_lats = latitudes[x][index:]+latitudes[x][:index]
-                plane_cycle_lons.append(sat_lons)
-                plane_cycle_lats.append(sat_lats)
-            all_cycles_lons.append(plane_cycle_lons)
-            all_cycles_lats.append(plane_cycle_lats)
-        df = pd.DataFrame(
-                {'OrbitalPath': zip(longitudes, latitudes),
-                'Longitudes': all_cycles_lons,
-                'Latitudes': all_cycles_lats
-                }
-        )
-        return df
+# def createdf(file):
+#         with open(file, 'rb') as f:
+#                 longitudes, latitudes, section, starting_positions  = pck.load(f)
+#         all_cycles_lons = []
+#         all_cycles_lats = []
+#         for x in range(0, len(starting_positions)):
+#             plane_cycle_lons = []
+#             plane_cycle_lats = []
+#             for init_pos in starting_positions[x]:
+#                 index = longitudes[x].index(init_pos[0])
+#                 sat_lons = longitudes[x][index:]+longitudes[x][:index]
+#                 sat_lats = latitudes[x][index:]+latitudes[x][:index]
+#                 plane_cycle_lons.append(sat_lons)
+#                 plane_cycle_lats.append(sat_lats)
+#             all_cycles_lons.append(plane_cycle_lons)
+#             all_cycles_lats.append(plane_cycle_lats)
+#         df = pd.DataFrame(
+#                 {'OrbitalPath': zip(longitudes, latitudes),
+#                 'Longitudes': all_cycles_lons,
+#                 'Latitudes': all_cycles_lats
+#                 }
+#         )
+#         return df
 
 colourdict = {1 : ['red', [255, 0, 0] ], 
                 2 : ['green', [0, 255, 0]], 
@@ -37,9 +39,11 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 5: ['hotpink', [255, 105, 180]]}
 
 def init_plot(no_of_deployments):
-        df = createdf('data/planes1.pck')
-        longitudes = df['Longitudes']
-        latitudes = df['Latitudes']
+        df = pck.load('data/positions.pck')
+        df.head()
+        # for i in df['Planes']
+        # longitudes = df['Longitudes']
+        # latitudes = df['Latitudes']
         t = np.linspace(-1, 1, 100)
         x = longitudes
         y = latitudes
@@ -49,30 +53,26 @@ def init_plot(no_of_deployments):
         yM = 90
         freq = 1
         N = int(np.floor(len(x[0])/freq))+1
-        print(longitudes)
-        lon_frames = []
-        for position in range(len(longitudes[0][0])):
-                sing_frame = []
-                for plane in longitudes:
-                        for satellite in plane:
-                                sing_frame.append(satellite[position])
-                lon_frames.append(sing_frame)
-        lat_frames = []
-        for position in range(len(latitudes[0][0])):
-                sing_frame = []
-                for plane in latitudes:
-                        for satellite in plane:
-                                sing_frame.append(satellite[position])
-                lat_frames.append(sing_frame)
-        # print(lat_frames)
-        # print(np.shape(lon_frames))
-
-        # print((lon_frames))
         rang = np.arange(0, len(x[0][0]), freq)
-        # lon_frames = [xi[k] for i in range(0,len(longitudes)) for xi in longitudes[i] for k in rang]
-        # lat_frames = np.array([yi[k] for i in range(0,len(latitudes)) for yi in latitudes[i] for k in rang]).flatten()
+
+
+        # lon_frames = []
+        # for position in range(len(longitudes[0][0])):
+        #         sing_frame = []
+        #         for plane in longitudes:
+        #                 for satellite in plane:
+        #                         sing_frame.append(satellite[position])
+        #         lon_frames.append(sing_frame)
+        # lat_frames = []
+        # for position in range(len(latitudes[0][0])):
+        #         sing_frame = []
+        #         for plane in latitudes:
+        #                 for satellite in plane:
+        #                         sing_frame.append(satellite[position])
+        #         lat_frames.append(sing_frame)
+
         fig = go.Figure(
-                data=[go.Scatter(x=[], y=[],
+                data=[go.Scattergeo(lon=[], lat=[],
                      name="frame",
                      mode="lines",
                      line=dict(width=2, color="blue")),
@@ -93,18 +93,18 @@ def init_plot(no_of_deployments):
                 'xanchor': 'center',
                 'yanchor': 'top'},
                 # title_text="Starlink Phase 1", hovermode="closest",
-                updatemenus=[dict(type="buttons",
-                buttons=[dict(label="Play",
-                method="animate",
-                args=[None, {"frame": {"duration": 100, "redraw": False},}])])]),
-                frames=[go.Frame(
-                data=[go.Scatter(
-                x=lon_frames[i],
-                y=lat_frames[i],
-                mode="markers",
-                marker=dict(color='red', size=5))
-                ]) for i in range(len(longitudes[0][0]))]
-                        )
+                # updatemenus=[dict(type="buttons",
+                # buttons=[dict(label="Play",
+                # method="animate",
+                # args=[None, {"frame": {"duration": 100, "redraw": False},}])])]),
+                # frames=[go.Frame(
+                # data=[go.Scatter(
+                # x=lon_frames[i],
+                # y=lat_frames[i],
+                # mode="markers",
+                # marker=dict(color='red', size=5))
+                # ]) for i in range(len(longitudes[0][0]))]
+                        ))
         # fig.add_trace( 
         #                 go.Scattergeo(lon= np.arange(-180,180.5,0.5), lat= np.zeros(360*2), 
         #                                 mode='lines',

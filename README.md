@@ -8,12 +8,23 @@ Repository for 20/21 Masters Project
 
 ```bash
  sudo apt-get install python3-pip
+ pip install virtualenv
+ source venv/bin/activate
  pip install -r requirements.txt
 ```
 
-Then run sim.py with python3:
+Then run the simulation with synchronised 3d space and ground track plotting execute as following
 
-        python3 sim.py
+```bash
+./begin_sim.sh
+```
 
-![](./figs/3d.png)
+To kill the execution:
+
+```bash
+killall python
+```
+
+<img src="./figs/3d.png" alt="10" style="zoom:120%;" />
+
 <img src="./figs/2d.png" alt="10" style="zoom:120%;" />
