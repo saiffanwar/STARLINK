@@ -5,8 +5,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
-from geometry import fetch_locs
+from geometry import fetch_locs, fetch_orbit
 import webbrowser
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -28,10 +29,9 @@ app.layout = html.Div(
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n):
 
-    longitudes, latitudes = fetch_locs()
     # Create the graph with subplots
     fig = go.Figure(
-                data=[go.Scattergeo(lon=longitudes, lat=latitudes,
+                data=[go.Scattergeo(lon=[], lat=[],
                     name="frame",
                     mode="markers",
                     marker=dict(color='red', size=5))],
@@ -47,7 +47,17 @@ def update_graph_live(n):
                     'xanchor': 'center',
                     'yanchor': 'top'}
                     ))
-
+    for i in range(1,2):
+        longitudes, latitudes, colour = fetch_locs(i)
+        fig.add_trace(go.Scattergeo(lon=longitudes, lat=latitudes,
+                        name="frame",
+                        mode="markers",
+                        marker=dict(color=colour, size=5)))
+        # xs, ys = fetch_orbit()
+        # fig.add_trace(go.Scattergeo(lon=xs, lat=ys,
+        #                 name="frame",
+        #                 mode="lines",
+        #                 line=dict(width=2, color="blue")))
     return fig
 
 # port = 8050 # or simply open on the default `8050` port

@@ -5,12 +5,27 @@ from turtle import *
 from vpython import *
 import pickle as pck
 import pandas as pd
+
+
+colourdict = {1 : ['red', [255, 0, 0] ], 
+                2 : ['green', [0, 255, 0]], 
+                3: ['orange', [255, 165, 0]], 
+                4: ['purple', [128, 0, 128]], 
+                5: ['hotpink', [255, 105, 180]]}
+
 def rad(x):
     return (x*math.pi/180)
 
 def deg(x):
     return (x*180/math.pi)
     
+def sign(x):
+    if x < 0:
+        return 'negative'
+    elif x > 0:
+        return 'positive'
+    else:
+        return 'zero'
 # VPython's coordinate axis are wrong according to standard practice.
 # This function rearranges the coordinates to comply with the library.
 def std2vpy(old_x,old_y,old_z, inverse=0):
@@ -62,18 +77,40 @@ def cart2geo(x, y, z):
     # print(x,y,z)
     r, theta, phi = cart2polar(x, y, z)
     longitude, latitude = polar2geo(r, theta, phi,x,y,z)
-    return np.round(longitude,2), np.round(latitude
-,2)
+    return np.round(longitude,2), np.round(latitude,2)
 
-def fetch_locs():
+def fetch_locs(deployment):
     df = pd.DataFrame({
         'Plane': []
     })
-    plane_positions = pck.load(open('data/positions.pck', 'rb'))
     longitudes = []
     latitudes = []
+    plane_positions = pck.load(open('data/positions'+str(deployment)+'.pck', 'rb'))
     for i in plane_positions:
         lon, lat = cart2geo(i[0], i[1], i[2])
         longitudes.append(lon)
         latitudes.append(lat)
+    return longitudes, latitudes, colourdict[deployment][0]
+
+# This function takes the current position of a satellite and adjusts it to match the earths rotation.
+def rotate_orbit(theta, x):
+    old_theta = theta
+    if x>=0:
+        if theta >= 0:
+            theta = deg(theta)
+        else:
+            theta = 180 + deg(theta)
+    if x<0:
+        if theta >= 0:
+            theta = 180 + deg(theta)
+        else:
+            theta = 360 + deg(theta)
+
+    return rad(theta-1/240)
+
+
+def fetch_orbit():
+    orbital_path = pck.load(open('data/orbit.pck', 'rb'))
+    longitudes = [x[0] for x in orbital_path]
+    latitudes = [x[1] for x in orbital_path]
     return longitudes, latitudes
