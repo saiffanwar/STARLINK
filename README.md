@@ -16,8 +16,10 @@ Repository for 20/21 Masters Project
 Then run the simulation with synchronised 3d space and ground track plotting execute as following
 
 ```bash
-./begin_sim.sh
+python 3dsim.py
 ```
+
+You can click the IP in the terminal to view the live geographical representation of the simulation.
 
 To kill the execution:
 

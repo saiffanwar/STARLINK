@@ -25,7 +25,7 @@ colourdict = {1 : ['red', [255, 0, 0] ],
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
     width=1000, height=1500,
-    center=vector(0,0,0), background=vector(40/255, 44/255, 51/255))
+    center=vector(0,0,0))#, background=vector(40/255, 44/255, 51/255))
 lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
 
 ######### PHYSICAL PARAMETER SETUP #########
@@ -45,7 +45,7 @@ c = curve(color=color.blue, radius=100E2)
 
 def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     x, y, z = coords
-    satellite = sphere(pos=vector(x,y,z), radius = 150E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
+    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
     satellite.mass = 250
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
