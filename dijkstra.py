@@ -7,15 +7,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import networkx
 
-longitudes, latitudes, colour = fetch_locs(1)
-def chunks(lst, n=50):
+def chunks(lst,n):
     for i in range(0, len(lst), n):
             yield lst[i:i + n]
 
-longitudes = list(chunks(longitudes))
-latitudes = list(chunks(latitudes))
 
-def find_edges(satPlaneNumber, satNumber):
+def find_edges(satPlaneNumber, satNumber, longitudes):
 
     sats_per_plane = len(longitudes[0])
     no_of_planes = len(longitudes)
@@ -41,15 +38,6 @@ def find_edges(satPlaneNumber, satNumber):
         edges.append([satPlaneNumber + 1, satNumber])
     return edges
 
-planedf = pd.DataFrame(index=np.arange(32), columns=np.arange(50))
-
-for i in range(32):
-    planedf.iloc[i] = [[longitudes[i][j], latitudes[i][j],find_edges(i,j)] for j in range(len(longitudes[i]))]
-
-print(planedf)
-
-
-   
 # Realigns the ground map of satellites so that the starting satellite is in the centre.
 # This means the furthest we can possibly travel is at the edge of the 2d map and removes need for cycling later on.
 # This also halves the time complexity because we know which side of the map the destination is located
@@ -82,34 +70,54 @@ def calc_distanceBetween(sat1, sat2, longitudes, latitudes):
     return sat1_loc, sat2_loc
 
 
-realigned_lons = realignment(np.array(longitudes).flatten(), [-144.22,0])
 
-realigned_sats = pd.DataFrame({
-    'Old Longitude': np.array(longitudes).flatten(),
-    'Realigned Longitude': realigned_lons,
-    'Latitude': np.array(latitudes).flatten(),
-})
-
-# pprint(realigned_sats)
-# def shortest_path():
 fig = go.Figure(go.Scatter( 
                 x=[],y=[],
                 # x=realigned_sats['Realigned Longitude'],
                 # x=realigned_sats['Old Longitude'],
                 # y=realigned_sats['Latitude'],
-                mode='markers',
-                text = np.arange(0,len(longitudes),1)
                 ))
 
-for i,j in zip(longitudes, latitudes):
-#     sat1, sat2 = calc_distanceBetween(i, j, realigned_lons, latitudes)
+
+planedfs = {}
+for deployment in range(1,3):
+    longitudes, latitudes, no_of_planes, sats_per_plane, colour = fetch_locs(deployment)
+    longitudes = list(chunks(longitudes, sats_per_plane))
+    latitudes = list(chunks(latitudes, sats_per_plane))
+    planedfs[str(deployment)] = pd.DataFrame(index=np.arange(len(longitudes)), columns=np.arange(len(longitudes[0])))
+
+    for i in range(len(longitudes)):
+        planedfs[str(deployment)].iloc[i] = [[longitudes[i][j], latitudes[i][j],find_edges(i,j, longitudes)] for j in range(len(longitudes[i]))]
 
     fig.add_trace(go.Scatter(
-                    x=i,
-                    y=j,
-                    mode="markers",
-                    # line=dict(width=2, color="red")
-))
+                x=realigned_sats['Old Longitude'],
+                y=realigned_sats['Latitude'],
+                mode="markers",
+                marker=dict(color=colour, size=5))
+    )
+   
+    realigned_lons = realignment(np.array(longitudes).flatten(), [len(longitudes[0]),0])
+    realigned_sats = pd.DataFrame({
+        'Old Longitude': np.array(longitudes).flatten(),
+        'Realigned Longitude': realigned_lons,
+        'Latitude': np.array(latitudes).flatten(),
+    })
+
+    # fig.add_trace(go.Scatter(
+    #             x=realigned_sats['Realigned Longitude'],
+    #             y=realigned_sats['Latitude'],
+    #             mode="markers",
+    #             marker=dict(color=colour, size=5),
+    #             text=np.arange(0,len(longitudes),1)
+    # ))
+
+
+# def shortest_path():
+
+# for i,j in zip(longitudes, latitudes):
+# #     sat1, sat2 = calc_distanceBetween(i, j, realigned_lons, latitudes)
+
+
 fig.show()
 
 

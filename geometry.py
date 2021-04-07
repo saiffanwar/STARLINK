@@ -86,11 +86,13 @@ def fetch_locs(deployment):
     longitudes = []
     latitudes = []
     plane_positions = pck.load(open('data/positions'+str(deployment)+'.pck', 'rb'))
-    for i in plane_positions:
+    no_of_planes = plane_positions[0][0]
+    sats_per_plane = plane_positions[0][1]
+    for i in plane_positions[1:]:
         lon, lat = cart2geo(i[0], i[1], i[2])
         longitudes.append(lon)
         latitudes.append(lat)
-    return longitudes, latitudes, colourdict[deployment][0]
+    return longitudes, latitudes, no_of_planes, sats_per_plane, colourdict[deployment][0]
 
 # This function takes the current position of a satellite and adjusts it to match the earths rotation.
 def rotate_orbit(theta, x):

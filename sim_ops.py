@@ -45,7 +45,7 @@ c = curve(color=color.blue, radius=100E2)
 
 def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     x, y, z = coords
-    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
+    satellite = sphere(pos=vector(x,y,z), radius = 150E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
     satellite.mass = 250
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
@@ -53,7 +53,7 @@ def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
 
     return satellite
 
-def orbit(sats, altitude, deployment, run_rate=1):
+def orbit(sats, altitude, deployment, sats_per_plane, no_of_planes, run_rate=1):
     force_gravity = vector(0,0,0)
     t = 0
     dt = 1
@@ -63,7 +63,7 @@ def orbit(sats, altitude, deployment, run_rate=1):
         # earth.rotate(rad(1/240), axis=vec(0,1,0))
         # print(t)
         rate(100*len(sats)*run_rate)
-        plane_positions = []
+        plane_positions = [[no_of_planes, sats_per_plane]]
         for i, object in zip(np.arange(0,len(plane)), plane):
             new_pos(object, dt)
             pos = object.pos
@@ -165,5 +165,6 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
             
     with open('data/planes'+str(section)+'.pck', 'wb') as f:
         pck.dump([all_longitudes, all_latitudes, section, all_initial_pos], f)
+    threading.Thread(target=orbit, args=(sats, altitude, section, sats_per_plane, no_of_planes)).start()
     return sats
 

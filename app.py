@@ -47,7 +47,7 @@ def update_graph_live(n):
                     'xanchor': 'center',
                     'yanchor': 'top'}
                     ))
-    for i in range(1,2):
+    for i in range(1,3):
         longitudes, latitudes, colour = fetch_locs(i)
         fig.add_trace(go.Scattergeo(lon=longitudes, lat=latitudes,
                         name="frame",
