@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pickle as pck
 
+
 earth_radius = 6.37E6
 
 def chunks(lst,n):
@@ -77,11 +78,11 @@ def drawEdges(section, sat1, planedfs, fig):
     #             )
     # ))
 
-def createDF():
+def createDF(t):
     planedfs = {}
     # source_sat = [90.75,36.74]
     for section in range(1,2):
-        longitudes, latitudes = fetch_locs(section)
+        longitudes, latitudes = fetch_locs(section,t)
         no_of_planes = Phases['Planes'][section-1]
         sats_per_plane = Phases['Sats per plane'][section-1]
         colour = colourdict[section][0]

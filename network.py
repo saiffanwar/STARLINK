@@ -8,7 +8,7 @@ import time
 
 def createNetworkGraph(graphdict, time):
     # tic  = time.time()
-    planedfs = createDF()
+    planedfs = createDF(time)
     # print(time.time() - tic)
     for section in range(1,2):
         no_of_planes = Phases['Planes'][section-1]
@@ -57,3 +57,15 @@ def createNetworkGraph(graphdict, time):
 # nx.draw_networkx_edges(G,pos)
 # nx.draw(G)
 # plt.show()
+
+deployment = 1
+graphdict = {}
+plane_positions = pck.load(open('data/positions'+str(deployment)+'.pck', 'rb'))
+# print(plane_positions['0'])
+for i in range(1,20):
+    tic = time.time()
+    graphdict[str(i)] = createNetworkGraph(graphdict, i)
+    print(time.time()-tic)
+
+with open('graphdict.pck', 'wb') as f:
+    pck.dump(graphdict, f)

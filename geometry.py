@@ -18,7 +18,7 @@ colourdict = {1 : ['red', [255, 0, 0] ],
 #             'Inclination': [53, 53.2, 70, 97.6, 97.6], 
 #             'Altitude': [550E3, 540E3, 570E3, 560E3, 560E3]}
 
-Phases = {'Planes': [10, 6],
+Phases = {'Planes': [32, 6],
             'Sats per plane': [15, 20],
             'Inclination': [53,76],
             'Altitude': [550E3, 570E3]}
@@ -90,7 +90,7 @@ def cart2geo(x, y, z):
     longitude, latitude = polar2geo(r, theta, phi,x,y,z)
     return np.round(longitude,2), np.round(latitude,2)
 
-def fetch_locs(deployment):
+def fetch_locs(deployment,t):
     df = pd.DataFrame({
         'Plane': []
     })
@@ -99,7 +99,7 @@ def fetch_locs(deployment):
     plane_positions = pck.load(open('data/positions'+str(deployment)+'.pck', 'rb'))
     # no_of_planes = plane_positions[0][0]
     # sats_per_plane = plane_positions[0][1]
-    for i in plane_positions:
+    for i in plane_positions[str(t)]:
         lon, lat = cart2geo(i[0], i[1], i[2])
         longitudes.append(lon)
         latitudes.append(lat)

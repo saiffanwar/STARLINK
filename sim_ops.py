@@ -58,6 +58,7 @@ def orbit(sats, section, run_rate=1):
     period = (np.sqrt((4*(math.pi**2)*((altitude+earth.radius)**3))/(G*earth.mass)))
     plane = [pos for pos in sats ]
     graphdict = {}
+    positions = {}
     orbit = []
     while t<10000:
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
@@ -68,17 +69,18 @@ def orbit(sats, section, run_rate=1):
             pos = object.pos
             plane_positions.append([pos.x, pos.y, pos.z])
             # orbit.append([pos.x, pos.y, pos.z])
-        with open('data/positions'+str(section)+'.pck', 'wb') as f:
-            pck.dump(plane_positions, f)
-        if t%10 == 0:
-            tic = time.time()
-            graphdict['t'] = createNetworkGraph(graphdict, t)
-            print(time.time()-tic)
+        # if t%10 == 0:
+        #     tic = time.time()
+        #     graphdict['t'] = createNetworkGraph(graphdict, t)
+        #     print(time.time()-tic)
         
-            with open('graphdict.pck', 'wb') as f:
-                pck.dump(graphdict, f)
+            # with open('graphdict.pck', 'wb') as f:
+            #     pck.dump(graphdict, f)
         time.sleep(0.05)
         t=t+dt
+        positions[str(t)] = plane_positions
+        with open('data/positions'+str(section)+'.pck', 'wb') as f:
+            pck.dump(positions, f)
     with open('orbit.pck', 'wb') as f:
         pck.dump(orbit, f)
 
