@@ -5,7 +5,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
-from geometry import fetch_locs, fetch_orbit
+from geometry import *
 import webbrowser
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -18,7 +18,7 @@ app.layout = html.Div(
         dcc.Graph(id='live-update-graph'),
         dcc.Interval(
             id='interval-component',
-            interval=1*1000, # in milliseconds
+            interval=1*250, # in milliseconds
             n_intervals=0
         )
     ])
@@ -47,12 +47,12 @@ def update_graph_live(n):
                     'xanchor': 'center',
                     'yanchor': 'top'}
                     ))
-    for i in range(1,6):
-        longitudes, latitudes, no_of_planes, sats_per_plane, colour = fetch_locs(i)
+    for i in range(1,2):
+        longitudes, latitudes = fetch_locs(i)
         fig.add_trace(go.Scattergeo(lon=longitudes, lat=latitudes,
                         name="frame",
                         mode="markers",
-                        marker=dict(color=colour, size=5)))
+                        marker=dict(color=colourdict[i][0], size=5)))
         # xs, ys = fetch_orbit()
         # fig.add_trace(go.Scattergeo(lon=xs, lat=ys,
         #                 name="frame",

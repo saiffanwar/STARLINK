@@ -13,6 +13,17 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 4: ['purple', [128, 0, 128]], 
                 5: ['hotpink', [255, 105, 180]]}
 
+# Phases = {'Planes': [72, 72, 36, 6, 4] , 
+#             'Sats per plane': [22, 22, 20, 58, 43] , 
+#             'Inclination': [53, 53.2, 70, 97.6, 97.6], 
+#             'Altitude': [550E3, 540E3, 570E3, 560E3, 560E3]}
+
+Phases = {'Planes': [10, 6],
+            'Sats per plane': [15, 20],
+            'Inclination': [53,76],
+            'Altitude': [550E3, 570E3]}
+
+
 def rad(x):
     return (x*math.pi/180)
 
@@ -86,13 +97,13 @@ def fetch_locs(deployment):
     longitudes = []
     latitudes = []
     plane_positions = pck.load(open('data/positions'+str(deployment)+'.pck', 'rb'))
-    no_of_planes = plane_positions[0][0]
-    sats_per_plane = plane_positions[0][1]
-    for i in plane_positions[1:]:
+    # no_of_planes = plane_positions[0][0]
+    # sats_per_plane = plane_positions[0][1]
+    for i in plane_positions:
         lon, lat = cart2geo(i[0], i[1], i[2])
         longitudes.append(lon)
         latitudes.append(lat)
-    return longitudes, latitudes, no_of_planes, sats_per_plane, colourdict[deployment][0]
+    return longitudes, latitudes
 
 # This function takes the current position of a satellite and adjusts it to match the earths rotation.
 def rotate_orbit(theta, x):

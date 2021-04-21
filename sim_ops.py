@@ -10,17 +10,11 @@ import pickle as pck
 import csv
 # from flatsim import *
 import pandas as pd
-
-
+from network import createNetworkGraph
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
 
 
-colourdict = {1 : ['red', [255, 0, 0] ], 
-                2 : ['green', [0, 255, 0]], 
-                3: ['orange', [255, 165, 0]], 
-                4: ['purple', [128, 0, 128]], 
-                5: ['hotpink', [255, 105, 180]]}
 
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
@@ -53,26 +47,41 @@ def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
 
     return satellite
 
-def orbit(sats, altitude, deployment, sats_per_plane, no_of_planes, run_rate=1):
+def orbit(sats, section, run_rate=1):
+    no_of_planes = Phases['Planes'][section-1]
+    sats_per_plane = Phases['Sats per plane'][section-1]
+    altitude = Phases['Altitude'][section-1]
+
     force_gravity = vector(0,0,0)
     t = 0
     dt = 1
     period = (np.sqrt((4*(math.pi**2)*((altitude+earth.radius)**3))/(G*earth.mass)))
     plane = [pos for pos in sats ]
-    while True:
-        # earth.rotate(rad(1/240), axis=vec(0,1,0))
-        # print(t)
+    graphdict = {}
+    orbit = []
+    while t<10000:
+        # Computes the graph of the current static network and stores it in a dict with the timestamp.
         rate(100*len(sats)*run_rate)
-        plane_positions = [[no_of_planes, sats_per_plane]]
+        plane_positions = []
         for i, object in zip(np.arange(0,len(plane)), plane):
             new_pos(object, dt)
             pos = object.pos
             plane_positions.append([pos.x, pos.y, pos.z])
-        with open('data/positions'+str(deployment)+'.pck', 'wb') as f:
+            # orbit.append([pos.x, pos.y, pos.z])
+        with open('data/positions'+str(section)+'.pck', 'wb') as f:
             pck.dump(plane_positions, f)
+        if t%10 == 0:
+            tic = time.time()
+            graphdict['t'] = createNetworkGraph(graphdict, t)
+            print(time.time()-tic)
         
-        # time.sleep(1)
+            with open('graphdict.pck', 'wb') as f:
+                pck.dump(graphdict, f)
+        time.sleep(0.05)
         t=t+dt
+    with open('orbit.pck', 'wb') as f:
+        pck.dump(orbit, f)
+
 
 def new_pos(object, dt):
     force_gravity = -G*earth.mass*object.mass/(mag(object.pos-earth.pos)**2)*norm(object.pos-earth.pos)
@@ -84,12 +93,7 @@ def new_pos(object, dt):
     r, theta, phi = cart2polar(pos.x, pos.y, pos.z)
     rotated_position = polar2cart(r, rotate_orbit(theta, pos.x), phi)
     object.pos = vec(rotated_position[0], rotated_position[1], rotated_position[2])
-    # object.orbit.append(pos=object.pos)
-    # geo_pos = cart2geo(pos.x, pos.y, pos.z)
-    # current_orbit.append([geo_pos[0], geo_pos[1]])
-    # print(current_orbit)
-    # with open('data/orbit.pck', 'wb') as f:
-    #         pck.dump(current_orbit, f)
+
     return object
 
 def initial_plane(object, no_of_sats, period, plane_number, total_planes, section):
@@ -133,7 +137,12 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, sectio
     # [c.append(x) for x in orbit]
     return plane_sats, longitudes, latitudes, starting_positions
 
-def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
+def phase(section):
+    no_of_planes = Phases['Planes'][section-1]
+    sats_per_plane = Phases['Sats per plane'][section-1]
+    inclination = Phases['Inclination'][section-1]
+    altitude = Phases['Altitude'][section-1]
+
     thetas = np.linspace(0,360,no_of_planes+1)
     if section ==2:
         thetas = np.linspace((360/no_of_planes)/2,360+ (360/no_of_planes)/2,no_of_planes+1)
@@ -165,6 +174,5 @@ def phase(no_of_planes, sats_per_plane, inclination, altitude, section):
             
     with open('data/planes'+str(section)+'.pck', 'wb') as f:
         pck.dump([all_longitudes, all_latitudes, section, all_initial_pos], f)
-    threading.Thread(target=orbit, args=(sats, altitude, section, sats_per_plane, no_of_planes)).start()
     return sats
 

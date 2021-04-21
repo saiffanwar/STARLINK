@@ -5,120 +5,133 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import networkx
+import pickle as pck
+
+earth_radius = 6.37E6
 
 def chunks(lst,n):
     for i in range(0, len(lst), n):
             yield lst[i:i + n]
 
 
-def find_edges(satPlaneNumber, satNumber, longitudes):
-
+def find_neighbours(planeNumber, satNumber, longitudes):
     sats_per_plane = len(longitudes[0])
     no_of_planes = len(longitudes)
     edges = []
     if satNumber == 0:
-        edges.append([satPlaneNumber, sats_per_plane])
-        edges.append([satPlaneNumber, satNumber + 1])
-    elif satNumber == sats_per_plane:
-        edges.append([satPlaneNumber, 0])
-        edges.append([satPlaneNumber, satNumber - 1])
+        edges.append([planeNumber, sats_per_plane-1])
+        edges.append([planeNumber, satNumber + 1])
+    elif satNumber == sats_per_plane-1:
+        edges.append([planeNumber, 0])
+        edges.append([planeNumber, satNumber - 1])
     else:
-        edges.append([satPlaneNumber, satNumber - 1])
-        edges.append([satPlaneNumber, satNumber + 1])
+        edges.append([planeNumber, satNumber - 1])
+        edges.append([planeNumber, satNumber + 1])
 
-    if satPlaneNumber == 0:
-        edges.append([no_of_planes,satNumber])
-        edges.append([satPlaneNumber + 1,satNumber])
-    elif satPlaneNumber == no_of_planes:
+    if planeNumber == 0:
+        edges.append([no_of_planes-1,satNumber])
+        edges.append([planeNumber + 1,satNumber])
+    elif planeNumber == no_of_planes-1:
         edges.append([0,satNumber])
-        edges.append([satPlaneNumber - 1,satNumber])
+        edges.append([planeNumber - 1,satNumber])
     else:
-        edges.append([satPlaneNumber - 1, satNumber])
-        edges.append([satPlaneNumber + 1, satNumber])
-    return edges
+        edges.append([planeNumber - 1, satNumber])
+        edges.append([planeNumber + 1, satNumber])
+    networkxnodes = [(i[0]*sats_per_plane)+i[1] for i in edges]
+    return edges, networkxnodes
+    
 
 # Realigns the ground map of satellites so that the starting satellite is in the centre.
 # This means the furthest we can possibly travel is at the edge of the 2d map and removes need for cycling later on.
 # This also halves the time complexity because we know which side of the map the destination is located
-def realignment(longitudes, central_sat):
-    # sat_numbers = np.arange(0,len(longitudes),1)
-    new_lons = []
-    if central_sat[0] >= 0:
-        for og_lon in longitudes:
-            if og_lon < (-180 + central_sat[0]):
-                new_lon = -360 - og_lon + central_sat[0]
-            else:
-                new_lon = -(og_lon - central_sat[0])
-            new_lons.append(new_lon)
-    elif central_sat[0] < 0:
-        for og_lon in longitudes:
-            if og_lon > (180 + central_sat[0]):
-                new_lon = 360 - og_lon + central_sat[0]
-            else:
-                new_lon = -(og_lon - central_sat[0])
-            new_lons.append(new_lon)
-    return new_lons
+
+def realignment(longitude, source_sat):
+    new_lon = longitude - source_sat[0]
+    if new_lon < -180:
+        new_lon = 180 + (new_lon%-180)
+    return new_lon
 
 # Returns the distance between 2 satellites in km.
 # Distance between deg of longitude is 111.32km.
 # Distance between deg of latitude is 111km.
-def calc_distanceBetween(sat1, sat2, longitudes, latitudes):
-    sat1_loc = [longitudes[sat1], latitudes[sat1]]
-    sat2_loc = [longitudes[sat2], latitudes[sat2]]
-    distance = np.sqrt((((sat1_loc[0] - sat2_loc[0])*111.32)**2)+(((sat1_loc[1] - sat2_loc[1])*111)**2))
-    return sat1_loc, sat2_loc
+def calcDistanceBetween(source_loc, dest_loc):
+    distance = np.sqrt((((source_loc[0] - dest_loc[0])*111.32E3)**2)+(((source_loc[1] - dest_loc[1])*111E3)**2))
+    return distance
 
 
-
-fig = go.Figure(go.Scatter( 
-                x=[],y=[],
-                # x=realigned_sats['Realigned Longitude'],
-                # x=realigned_sats['Old Longitude'],
-                # y=realigned_sats['Latitude'],
-                ))
-
-
-planedfs = {}
-for deployment in range(1,3):
-    longitudes, latitudes, no_of_planes, sats_per_plane, colour = fetch_locs(deployment)
-    longitudes = list(chunks(longitudes, sats_per_plane))
-    latitudes = list(chunks(latitudes, sats_per_plane))
-    planedfs[str(deployment)] = pd.DataFrame(index=np.arange(len(longitudes)), columns=np.arange(len(longitudes[0])))
-
-    for i in range(len(longitudes)):
-        planedfs[str(deployment)].iloc[i] = [[longitudes[i][j], latitudes[i][j],find_edges(i,j, longitudes)] for j in range(len(longitudes[i]))]
-
-    fig.add_trace(go.Scatter(
-                x=realigned_sats['Old Longitude'],
-                y=realigned_sats['Latitude'],
-                mode="markers",
-                marker=dict(color=colour, size=5))
-    )
-   
-    realigned_lons = realignment(np.array(longitudes).flatten(), [len(longitudes[0]),0])
-    realigned_sats = pd.DataFrame({
-        'Old Longitude': np.array(longitudes).flatten(),
-        'Realigned Longitude': realigned_lons,
-        'Latitude': np.array(latitudes).flatten(),
-    })
-
-    # fig.add_trace(go.Scatter(
-    #             x=realigned_sats['Realigned Longitude'],
-    #             y=realigned_sats['Latitude'],
-    #             mode="markers",
-    #             marker=dict(color=colour, size=5),
-    #             text=np.arange(0,len(longitudes),1)
+def drawEdges(section, sat1, planedfs, fig):
+    planeNumber, satNumber = sat1
+    satAttributes = planedfs[str(section)].iloc[planeNumber][satNumber]
+    print(planedfs[str(section)].iloc[planeNumber][satNumber]['Neighbours'])
+    
+    
+    # for [neighbourPlane, neighbourSat] in satAttributes['Neighbours'][0]:
+    #     print(type(neighbourPlane), type(neighbourSat))
+    #     fig.add_trace(go.Scatter(
+    #             x=[planedfs[str(section)].iloc[planeNumber][satNumber]['Realigned Longitude'], 
+    #                 planedfs[str(section)].iloc[neighbourPlane][neighbourSat]['Realigned Longitude']],
+    #             y=[planedfs[str(section)].iloc[planeNumber][satNumber]['Latitude'], 
+    #                 planedfs[str(section)].iloc[neighbourPlane][neighbourSat]['Latitude']],
+    #             mode="lines",
+    #             line=dict(width=2, color=colourdict[section][0], 
+    #             )
     # ))
 
+def createDF():
+    planedfs = {}
+    # source_sat = [90.75,36.74]
+    for section in range(1,2):
+        longitudes, latitudes = fetch_locs(section)
+        no_of_planes = Phases['Planes'][section-1]
+        sats_per_plane = Phases['Sats per plane'][section-1]
+        colour = colourdict[section][0]
+        longitudes = list(chunks(longitudes, sats_per_plane))
+        latitudes = list(chunks(latitudes, sats_per_plane))
+        planedfs[str(section)] = pd.DataFrame(index=np.arange(no_of_planes), columns=np.arange(sats_per_plane))
 
-# def shortest_path():
+        for i in range(no_of_planes):
+            planedfs[str(section)].iloc[i] = [{'Longitude': longitudes[i][j],
+                                                # 'Realigned Longitude': realignment(longitudes[i][j], source_sat), 
+                                                'Latitude': latitudes[i][j]} for j in range(sats_per_plane)]
+                                                # 'Neighbours': find_neighbours(i,j, longitudes)} for j in range(sats_per_plane)]
+    return planedfs
 
-# for i,j in zip(longitudes, latitudes):
-# #     sat1, sat2 = calc_distanceBetween(i, j, realigned_lons, latitudes)
+def plot(shortest_path, planedfs, fig=None):
+    if not fig:
+        fig = go.Figure(go.Scatter( 
+                        x=[],y=[],
+                        ))
+    for section in range(1,2):
+        no_of_planes = Phases['Planes'][section-1]
+        sats_per_plane = Phases['Sats per plane'][section-1]
+        colour = colourdict[section][0]
+        shortest_path = [divmod(i, sats_per_plane) for i in shortest_path[1]]
+        # fig = go.Figure(go.Scatter( 
+        #                 x=[],y=[],
+        #                 ))
+        # fig.add_trace(go.Scatter(
+        #                     x=[planedfs[str(section)].iloc[i][j]['Longitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
+        #                     y=[planedfs[str(section)].iloc[i][j]['Latitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
+        #                     mode="markers",
+        #                     marker=dict(color=colour, size=5))
+        # )
+        fig.add_trace(go.Scatter(
+                    x=[planedfs[str(section)].iloc[i][j]['Longitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
+                    y=[planedfs[str(section)].iloc[i][j]['Latitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
+                    mode="markers",
+                    marker=dict(color=colour, size=8))
+        )
+        for i in range(len(shortest_path)-1):
+            fig.add_trace(go.Scatter(
+                x=[planedfs[str(section)].iloc[shortest_path[i][0]][shortest_path[i][1]]['Longitude'], 
+                    planedfs[str(section)].iloc[shortest_path[i+1][0]][shortest_path[i+1][1]]['Longitude']],
+                y=[planedfs[str(section)].iloc[shortest_path[i][0]][shortest_path[i][1]]['Latitude'], 
+                    planedfs[str(section)].iloc[shortest_path[i+1][0]][shortest_path[i+1][1]]['Latitude']],
+                mode="lines",
+                line=dict(width=2, color=colourdict[section][0]) 
+                ))
+    return fig
+    # fig.show()
 
 
-fig.show()
-
-
-
+# plot()
