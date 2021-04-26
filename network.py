@@ -68,24 +68,24 @@ def createNetworkGraph(time):
     return G, positions#, all_edges
 
 
-# section=1
-# graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb'))
+section=1
+graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb'))
 
 # print(graphdict.items())
 # tic = time.time()
 # # graphdict = createNetworkGraph({},10)
 # print(time.time() -tic)
-# G, positions = graphdict['10']
-# source_sat = find_sat(Locations['New York'], positions)
-# dest_sat = find_sat(Locations['Johannesburg'], positions)
+G, positions = graphdict['10']
+source_sat = find_sat(Locations['London'], positions)
+dest_sat = find_sat(Locations['Johannesburg'], positions)
 
-# shortest_path = nx.single_source_dijkstra(G, source_sat, dest_sat,weight='weight')
+shortest_path = nx.single_source_dijkstra(G, source_sat, dest_sat,weight='weight')
 
 
-# print(shortest_path)
-# print('Shortest Path Latency: ', shortest_path[0]/300E6)
-# fig = plot(shortest_path[1], positions)
-# fig.show()
+print(shortest_path)
+print('Shortest Path Latency: ', shortest_path[0]/300E6)
+fig = plot(shortest_path[1], positions)
+fig.show()
 
 # pos = nx.spiral_layout(G)
 # labels = nx.get_edge_attributes(G,'weight')

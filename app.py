@@ -74,8 +74,8 @@ def update_graph_live(n):
     # try:
         G, positions = graphdict[str(int(np.floor(time/10)*10))]
 
-        source = Locations['New York']
-        destination = Locations['London']
+        source = Locations['London']
+        destination = Locations['Johannesburg']
         source_sat = find_sat(source, positions)
         destination_sat = find_sat(destination, positions)
 

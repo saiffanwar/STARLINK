@@ -34,7 +34,7 @@ Phases = {'Planes': [32, 6],
 # calculates features for the phase depending on the altitude.
 Phases['max comms range'] = [np.sqrt(((earth_radius+Phases['Altitude'][0])**2) - (earth_radius**2)), 
                             np.sqrt(((earth_radius+Phases['Altitude'][1])**2) - (earth_radius**2))]
-Phases['max ground reach'] = [Phases['Altitude'][0]*math.tan(rad(40)),
+Phases['max ground reach'] = [2*Phases['Altitude'][0]*math.tan(rad(40)),
                             Phases['Altitude'][1]*math.tan(rad(40))]
 
 # Some popular locations defined by geographical coordinates
@@ -179,22 +179,6 @@ def calcDistanceBetween(source_loc, dest_loc):
     distance = np.sqrt((((source_loc[0] - dest_loc[0])*111.32E3)**2)+(((source_loc[1] - dest_loc[1])*111E3)**2))
     return distance
 
-# def find_sat(source_location,df):
-#     # section = 1
-#     # df = df[str(section)]
-#     no_of_planes = Phases['Planes'][1-1]
-#     sats_per_plane = Phases['Sats per plane'][1-1]
-#     altitude = Phases['Altitude'][1-1]
-#     divergence = altitude*math.sin(rad(80))
-#     divergence = 1E6
-#     for i in range(no_of_planes):
-#         for j in range(sats_per_plane):
-#             # print([df['1'].loc[i].iloc[j]['Longitude'],df['1'].loc[i].iloc[j]['Latitude']], calcDistanceBetween(source_location, 
-#             #                         [df['1'].loc[i].iloc[j]['Longitude'],df['1'].loc[i].iloc[j]['Latitude']]))
-#             if calcDistanceBetween(source_location, 
-#                                     [df['1'].loc[i].iloc[j]['Longitude'],df['1'].loc[i].iloc[j]['Latitude']]) < divergence:
-#                                     return (i*sats_per_plane)+j
-
 def find_sat(source, positions):
     section=1
     temp_pos = deepcopy(positions)
@@ -211,12 +195,12 @@ def find_sat(source, positions):
             # print(closest_lon, closest_lat, positions[closest_lon], positions[closest_lat])
 
             if calcDistanceBetween(source, positions[closest_lon]) < Phases['max ground reach'][section-1]:
-                print('Sat Found!')
+                # print('Sat Found!')
                 return closest_lon
             else:
                 temp_lons.pop(temp_lons.index(min(temp_lons)))
             if calcDistanceBetween(source, positions[closest_lat]) < Phases['max ground reach'][section-1]:
-                print('Sat Found!')
+                # print('Sat Found!')
                 return closest_lat
             else:
                 temp_lats.pop(temp_lats.index(min(temp_lats)))

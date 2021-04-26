@@ -4,6 +4,7 @@ from geometry import *
 from pprint import pprint
 import multiprocessing as mp
 from tqdm import tqdm
+import threading
 
 section = 1
 graphdict = {}
@@ -32,7 +33,7 @@ def chunks(lst,n):
             yield lst[i:i + n]
 
 times = np.arange(1,len(plane_positions),1)
-times = [int(i) for i in times[0:100]]
+times = [int(i) for i in times[0:1000]]
 print(times)
 # times = chunks(times,4)
 # if __name__ == '__main__':

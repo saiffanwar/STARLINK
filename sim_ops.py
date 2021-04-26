@@ -62,7 +62,7 @@ def orbit(sats, section, run_rate=1):
     orbit = []
     while t<5000:
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
-        # rate(100*len(sats)*run_rate)
+        rate(100*len(sats)*run_rate)
         plane_positions = []
         for i, object in zip(np.arange(0,len(plane)), plane):
             new_pos(object, dt)
@@ -76,7 +76,7 @@ def orbit(sats, section, run_rate=1):
         
             # with open('graphdict.pck', 'wb') as f:
             #     pck.dump(graphdict, f)
-        # time.sleep(1/speed)
+        time.sleep(1/speed)
         t=t+dt
         if t%100==0:
             print(t)    
