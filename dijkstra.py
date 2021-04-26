@@ -78,35 +78,36 @@ def drawEdges(section, sat1, planedfs, fig):
     #             )
     # ))
 
-def createDF(t):
-    planedfs = {}
-    # source_sat = [90.75,36.74]
-    for section in range(1,2):
-        longitudes, latitudes = fetch_locs(section,t)
-        no_of_planes = Phases['Planes'][section-1]
-        sats_per_plane = Phases['Sats per plane'][section-1]
-        colour = colourdict[section][0]
-        longitudes = list(chunks(longitudes, sats_per_plane))
-        latitudes = list(chunks(latitudes, sats_per_plane))
-        planedfs[str(section)] = pd.DataFrame(index=np.arange(no_of_planes), columns=np.arange(sats_per_plane))
+# def createDF(t):
+#     planedfs = {}
+#     # source_sat = [90.75,36.74]
+#     for section in range(1,2):
+#         longitudes, latitudes = fetch_locs(section,t)
+#         no_of_planes = Phases['Planes'][section-1]
+#         sats_per_plane = Phases['Sats per plane'][section-1]
+#         colour = colourdict[section][0]
+#         longitudes = list(chunks(longitudes, sats_per_plane))
+#         latitudes = list(chunks(latitudes, sats_per_plane))
+#         planedfs[str(section)] = pd.DataFrame(index=np.arange(no_of_planes), columns=np.arange(sats_per_plane))
 
-        for i in range(no_of_planes):
-            planedfs[str(section)].iloc[i] = [{'Longitude': longitudes[i][j],
-                                                # 'Realigned Longitude': realignment(longitudes[i][j], source_sat), 
-                                                'Latitude': latitudes[i][j]} for j in range(sats_per_plane)]
-                                                # 'Neighbours': find_neighbours(i,j, longitudes)} for j in range(sats_per_plane)]
-    return planedfs
+#         for i in range(no_of_planes):
+#             planedfs[str(section)].iloc[i] = [{'Longitude': longitudes[i][j],
+#                                                 # 'Realigned Longitude': realignment(longitudes[i][j], source_sat), 
+#                                                 'Latitude': latitudes[i][j]} for j in range(sats_per_plane)]
+#                                                 # 'Neighbours': find_neighbours(i,j, longitudes)} for j in range(sats_per_plane)]
+#     return planedfs
 
-def plot(shortest_path, planedfs, fig=None):
+def plot(shortest_path, positions, fig=None, all_edges=None):
+    # longitudes, latitudes = positions
     if not fig:
-        fig = go.Figure(go.Scatter( 
-                        x=[],y=[],
+        fig = go.Figure(go.Scattergeo( 
+                        lon=[],lat=[],
                         ))
     for section in range(1,2):
         no_of_planes = Phases['Planes'][section-1]
         sats_per_plane = Phases['Sats per plane'][section-1]
         colour = colourdict[section][0]
-        shortest_path = [divmod(i, sats_per_plane) for i in shortest_path[1]]
+        # shortest_path = [divmod(i, sats_per_plane) for i in shortest_path[1]]
         # fig = go.Figure(go.Scatter( 
         #                 x=[],y=[],
         #                 ))
@@ -116,21 +117,39 @@ def plot(shortest_path, planedfs, fig=None):
         #                     mode="markers",
         #                     marker=dict(color=colour, size=5))
         # )
-        fig.add_trace(go.Scatter(
-                    x=[planedfs[str(section)].iloc[i][j]['Longitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
-                    y=[planedfs[str(section)].iloc[i][j]['Latitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
+        fig.add_trace(go.Scattergeo(
+                    lon=[i[0] for i in positions],
+                    lat=[i[1] for i in positions],
                     mode="markers",
-                    marker=dict(color=colour, size=8))
+                    text=np.arange(0,400,1),
+                    marker=dict(color=colour, size=10))
         )
         for i in range(len(shortest_path)-1):
-            fig.add_trace(go.Scatter(
-                x=[planedfs[str(section)].iloc[shortest_path[i][0]][shortest_path[i][1]]['Longitude'], 
-                    planedfs[str(section)].iloc[shortest_path[i+1][0]][shortest_path[i+1][1]]['Longitude']],
-                y=[planedfs[str(section)].iloc[shortest_path[i][0]][shortest_path[i][1]]['Latitude'], 
-                    planedfs[str(section)].iloc[shortest_path[i+1][0]][shortest_path[i+1][1]]['Latitude']],
+            source = shortest_path[i]
+            destination = shortest_path[i+1]
+            fig.add_trace(go.Scattergeo(
+                lon=[positions[source][0], positions[destination][0]],
+                lat=[positions[source][1], positions[destination][1]],
                 mode="lines",
                 line=dict(width=2, color=colourdict[section][0]) 
                 ))
+        
+        if all_edges:
+            for i in range(len(all_edges)-1):
+                source, destination = all_edges[i]
+                # destination = shortest_path[i+1]
+                fig.add_trace(go.Scattergeo(
+                    lon=[positions[source][0], positions[destination][0]],
+                    lat=[positions[source][1], positions[destination][1]],
+                    mode="lines",
+                    line=dict(width=1, color='blue') 
+                    ))
+        # fig.add_shape(type="circle",
+        #         xref="x", yref="y",
+        #         x0=0, y0=0, x1=10, y1=10,
+        #         line_color="LightSeaGreen",
+        #     )
+
     return fig
     # fig.show()
 

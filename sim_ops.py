@@ -10,7 +10,7 @@ import pickle as pck
 import csv
 # from flatsim import *
 import pandas as pd
-from network import createNetworkGraph
+# from network import createNetworkGraph
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
 
@@ -60,7 +60,7 @@ def orbit(sats, section, run_rate=1):
     graphdict = {}
     positions = {}
     orbit = []
-    while t<10000:
+    while t<5000:
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
         rate(100*len(sats)*run_rate)
         plane_positions = []
@@ -76,11 +76,15 @@ def orbit(sats, section, run_rate=1):
         
             # with open('graphdict.pck', 'wb') as f:
             #     pck.dump(graphdict, f)
-        time.sleep(0.05)
+        time.sleep(1/speed)
         t=t+dt
+        if t%100==0:
+            print(t)    
         positions[str(t)] = plane_positions
-        with open('data/positions'+str(section)+'.pck', 'wb') as f:
-            pck.dump(positions, f)
+        with open('data/plane_positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb') as f:
+            pck.dump([t,plane_positions], f)
+    with open('data/positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb') as f:
+        pck.dump(positions, f)
     with open('orbit.pck', 'wb') as f:
         pck.dump(orbit, f)
 
