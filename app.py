@@ -27,8 +27,11 @@ app.layout = html.Div(
     ])
 )
 section=1
-with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb') as f:
-    graphdict = pck.load(f)
+try:
+    graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
+except:
+    pck.dump([], open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
+
 # Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))

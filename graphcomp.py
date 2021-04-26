@@ -11,8 +11,8 @@ plane_positions = pck.load(open('data/positions'+str(int(Phases['Altitude'][sect
 # plane_positions = list(zip(np.arange(0,len(plane_positions),1), plane_positions)
 # print(plane_positions['50'])
 def graphFromPos(times):
-    with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb') as f:
-        graphdict = pck.load(f)
+    # with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb') as f:
+    #     graphdict = pck.load(f)
     for i in times:
         if i%10 ==0:
             tic = time.time()
@@ -32,17 +32,17 @@ def chunks(lst,n):
             yield lst[i:i + n]
 
 times = np.arange(1,len(plane_positions),1)
-times = [int(i) for i in times[0:500]]
-print(type(times[0]))
-times = chunks(times,4)
-if __name__ == '__main__':
-    jobs = []
-    for i in times:
-        p = mp.Process(target=graphFromPos, args=(i,))
-        jobs.append(p)
-        p.start()
+times = [int(i) for i in times[0:100]]
+print(times)
+# times = chunks(times,4)
+# if __name__ == '__main__':
+#     jobs = []
+#     for i in times:
+#         p = mp.Process(target=graphFromPos, args=(i,))
+#         jobs.append(p)
+#         p.start()
 # print(graphdict.keys)
-# graphFromPos(times)
+graphFromPos(times)
 # with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'wb') as f:
 #     pck.dump(graphdict, f)
 # with open('graphdict1150.pck', 'rb') as f:
