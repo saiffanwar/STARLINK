@@ -26,15 +26,16 @@ colourdict = {1 : ['red', [255, 0, 0] ],
 #             'Altitude': [550E3, 540E3, 570E3, 560E3, 560E3]}
 earth_radius = 6.37E6
 
-Phases = {'Planes': [32, 6],
-            'Sats per plane': [20, 20],
+Phases = {'Planes': [72, 6],
+            'Sats per plane': [22, 20],
             'Inclination': [53,76],
-            'Altitude': [550E3, 570E3]}
+            'Altitude': [1150E3, 570E3],
+            'Offset': [49, 5]}
 
 # calculates features for the phase depending on the altitude.
 Phases['max comms range'] = [np.sqrt(((earth_radius+Phases['Altitude'][0])**2) - (earth_radius**2)), 
                             np.sqrt(((earth_radius+Phases['Altitude'][1])**2) - (earth_radius**2))]
-Phases['max ground reach'] = [2*Phases['Altitude'][0]*math.tan(rad(40)),
+Phases['max ground reach'] = [Phases['Altitude'][0]*math.tan(rad(40)),
                             Phases['Altitude'][1]*math.tan(rad(40))]
 
 # Some popular locations defined by geographical coordinates
@@ -43,13 +44,24 @@ Locations = {'London': [-0.13, 51.5],
             'New York': [-74.0, 40.7], 
             'Singapore': [103.8, 1.35]}
 
-try:
+try:    
+    print('Reading positions file....')
     positions = pck.load(open('data/positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
+    print('File opened.')
 except:
     pck.dump([], open('data/positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
 
+# try:
+#     print('Reading graphdict file....')
+#     graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
+#     print('File opened.')
+# except:
+#     pck.dump([], open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
+
 speed = 10
     
+
+
 def sign(x):
     if x < 0:
         return 'negative'

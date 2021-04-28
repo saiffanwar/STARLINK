@@ -1,13 +1,13 @@
-from network import *
+from network import createNetworkGraph
 import pickle as pck
-from geometry import *
+from geometry import graphdict
 from pprint import pprint
 import multiprocessing as mp
 from tqdm import tqdm
 import threading
 
 section = 1
-graphdict = {}
+# graphdict = {}
 plane_positions = pck.load(open('data/positions'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb'))
 # plane_positions = list(zip(np.arange(0,len(plane_positions),1), plane_positions)
 # print(plane_positions['50'])
@@ -28,6 +28,7 @@ def graphFromPos(times):
             return None
         except:
             pass
+        
 def chunks(lst,n):
     for i in range(0, len(lst), n):
             yield lst[i:i + n]

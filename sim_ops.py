@@ -39,7 +39,7 @@ c = curve(color=color.blue, radius=100E2)
 
 def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     x, y, z = coords
-    satellite = sphere(pos=vector(x,y,z), radius = 250E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
+    satellite = sphere(pos=vector(x,y,z), radius = 500E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
     satellite.mass = 250
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
@@ -68,14 +68,6 @@ def orbit(sats, section, run_rate=1):
             new_pos(object, dt)
             pos = object.pos
             plane_positions.append([pos.x, pos.y, pos.z])
-            # orbit.append([pos.x, pos.y, pos.z])
-        # if t%10 == 0:
-        #     tic = time.time()
-        #     graphdict['t'] = createNetworkGraph(graphdict, t)
-        #     print(time.time()-tic)
-        
-            # with open('graphdict.pck', 'wb') as f:
-            #     pck.dump(graphdict, f)
         time.sleep(1/speed)
         t=t+dt
         if t%100==0:
@@ -104,7 +96,8 @@ def new_pos(object, dt):
 
 def initial_plane(object, no_of_sats, period, plane_number, total_planes, section):
     plane_sats = []
-    phase_offset = 5/32 * (period/no_of_sats)
+    phase_offset = Phases['Offset'][section-1]
+    offset = phase_offset/72 * (period/no_of_sats)
     force_gravity = vector(0,0,0)
     t = 0
     dt = 10**(-precision)
@@ -113,13 +106,13 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, sectio
     acceleration = object.acceleration
     mass = object.mass
     coords = [pos.x, pos.y, pos.z]
-    intervals = np.around(np.linspace(0+(phase_offset*plane_number),period+(phase_offset*plane_number),no_of_sats+1), precision)[:-1]
+    intervals = np.around(np.linspace(0+(offset*plane_number),period+(offset*plane_number),no_of_sats+1), precision)[:-1]
     positions = []
     latitudes = []
     longitudes = []
     starting_positions = []
     orbit = []
-    while t<period+phase_offset*total_planes:
+    while t<period+offset*total_planes:
         t = np.round(t, 2)
         pos=pos+velocity*dt
         force_gravity = -G*earth.mass*mass/(mag(pos-earth.pos)**2)*norm(pos-earth.pos)
@@ -138,9 +131,12 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, sectio
     for j in positions:
         pos = j[0]
         sat = plot_satellite(j[0], j[1], colourdict[section][1])
+        if (plane_number != 0) and (plane_number != total_planes/2):
+            sat.visible = False
         plane_sats.append(sat)
-    # c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=50E2)
-    # [c.append(x) for x in orbit]
+    c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=100E2)
+    c = curve(color=color.green, radius=100E2)
+    [c.append(x) for x in orbit]
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(section):

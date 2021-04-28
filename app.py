@@ -5,11 +5,12 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
-from geometry import *
+from geometry import fetch_curr, colourdict, Locations, Phases
 import webbrowser
-from dijkstra import *
-import networkx as nx
+from dijkstra import plotPath
 import numpy as np 
+from network import calcPath
+import pickle as pck 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -26,18 +27,20 @@ app.layout = html.Div(
         )
     ])
 )
-section=1
 try:
+    print('Reading graphdict file....')
     graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
+    print('File opened.')
 except:
     pck.dump([], open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
+
 def update_graph_live(n):
     # print(n)
-    # Create the graph with subplots
+    # Initialise plot
     fig = go.Figure(
                 data=[go.Scattergeo(lon=[], lat=[],
                     name="frame",
@@ -64,27 +67,16 @@ def update_graph_live(n):
                         marker=dict(color=colourdict[i][0], size=5)))
 
         # for live dijkstra plotting when all positions have been calculated
-    # for i in range(1,2):
-    #     longitudes, latitudes = fetch_locs(i,time)
-    #     fig.add_trace(go.Scattergeo(lon=longitudes, lat=latitudes,
-    #                     name="frame",
-    #                     mode="markers",
-    #                     marker=dict(color=colourdict[i][0], size=5)))
-    # if (time)%10 == 0:
-    # try:
-        G, positions = graphdict[str(int(np.floor(time/10)*10))]
+        source = Locations['New York']
+        destination = Locations['London']
+        shortest_path, positions = calcPath(source, destination, int(np.floor(time/10)*10), graphdict)
+        # shortest_path = calcPath(source, destination, time, graphdict)
 
-        source = Locations['London']
-        destination = Locations['Johannesburg']
-        source_sat = find_sat(source, positions)
-        destination_sat = find_sat(destination, positions)
-
-        shortest_path = nx.single_source_dijkstra(G, source_sat, destination_sat, weight='weight')
         fig.add_annotation(
             text="Shortest Path Latency: "+str(np.round(shortest_path[0]/300E3,3))+"ms",
             showarrow=False,
             yshift=-300)
-        fig = plot(shortest_path[1], positions, fig)
+        fig = plotPath(shortest_path[1], positions, fig)
         fig.update_layout(showlegend=False)
     # except:
     #     pass

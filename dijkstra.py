@@ -65,40 +65,8 @@ def drawEdges(section, sat1, planedfs, fig):
     satAttributes = planedfs[str(section)].iloc[planeNumber][satNumber]
     print(planedfs[str(section)].iloc[planeNumber][satNumber]['Neighbours'])
     
-    
-    # for [neighbourPlane, neighbourSat] in satAttributes['Neighbours'][0]:
-    #     print(type(neighbourPlane), type(neighbourSat))
-    #     fig.add_trace(go.Scatter(
-    #             x=[planedfs[str(section)].iloc[planeNumber][satNumber]['Realigned Longitude'], 
-    #                 planedfs[str(section)].iloc[neighbourPlane][neighbourSat]['Realigned Longitude']],
-    #             y=[planedfs[str(section)].iloc[planeNumber][satNumber]['Latitude'], 
-    #                 planedfs[str(section)].iloc[neighbourPlane][neighbourSat]['Latitude']],
-    #             mode="lines",
-    #             line=dict(width=2, color=colourdict[section][0], 
-    #             )
-    # ))
 
-# def createDF(t):
-#     planedfs = {}
-#     # source_sat = [90.75,36.74]
-#     for section in range(1,2):
-#         longitudes, latitudes = fetch_locs(section,t)
-#         no_of_planes = Phases['Planes'][section-1]
-#         sats_per_plane = Phases['Sats per plane'][section-1]
-#         colour = colourdict[section][0]
-#         longitudes = list(chunks(longitudes, sats_per_plane))
-#         latitudes = list(chunks(latitudes, sats_per_plane))
-#         planedfs[str(section)] = pd.DataFrame(index=np.arange(no_of_planes), columns=np.arange(sats_per_plane))
-
-#         for i in range(no_of_planes):
-#             planedfs[str(section)].iloc[i] = [{'Longitude': longitudes[i][j],
-#                                                 # 'Realigned Longitude': realignment(longitudes[i][j], source_sat), 
-#                                                 'Latitude': latitudes[i][j]} for j in range(sats_per_plane)]
-#                                                 # 'Neighbours': find_neighbours(i,j, longitudes)} for j in range(sats_per_plane)]
-#     return planedfs
-
-def plot(shortest_path, positions, fig=None, all_edges=None):
-    # longitudes, latitudes = positions
+def plotPath(shortest_path, positions, fig=None, all_edges=None):
     if not fig:
         fig = go.Figure(go.Scattergeo( 
                         lon=[],lat=[],
@@ -107,23 +75,14 @@ def plot(shortest_path, positions, fig=None, all_edges=None):
         no_of_planes = Phases['Planes'][section-1]
         sats_per_plane = Phases['Sats per plane'][section-1]
         colour = colourdict[section][0]
-        # shortest_path = [divmod(i, sats_per_plane) for i in shortest_path[1]]
-        # fig = go.Figure(go.Scatter( 
-        #                 x=[],y=[],
-        #                 ))
-        # fig.add_trace(go.Scatter(
-        #                     x=[planedfs[str(section)].iloc[i][j]['Longitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
-        #                     y=[planedfs[str(section)].iloc[i][j]['Latitude'] for i in range(no_of_planes) for j in range(sats_per_plane)],
-        #                     mode="markers",
-        #                     marker=dict(color=colour, size=5))
+
+        # fig.add_trace(go.Scattergeo(
+        #             lon=[i[0] for i in positions],
+        #             lat=[i[1] for i in positions],
+        #             mode="markers",
+        #             text=np.arange(0,400,1),
+        #             marker=dict(color=colour, size=10))
         # )
-        fig.add_trace(go.Scattergeo(
-                    lon=[i[0] for i in positions],
-                    lat=[i[1] for i in positions],
-                    mode="markers",
-                    text=np.arange(0,400,1),
-                    marker=dict(color=colour, size=10))
-        )
         for i in range(len(shortest_path)-1):
             source = shortest_path[i]
             destination = shortest_path[i+1]
@@ -144,11 +103,6 @@ def plot(shortest_path, positions, fig=None, all_edges=None):
                     mode="lines",
                     line=dict(width=1, color='blue') 
                     ))
-        # fig.add_shape(type="circle",
-        #         xref="x", yref="y",
-        #         x0=0, y0=0, x1=10, y1=10,
-        #         line_color="LightSeaGreen",
-        #     )
 
     return fig
     # fig.show()
