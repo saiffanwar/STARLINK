@@ -1,12 +1,12 @@
 import numpy as np
-from geometry import *
+from geometry import Phases, colourdict
 from pprint import pprint
 from matplotlib import pyplot as plt
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import pickle as pck
-
+import math
 
 earth_radius = 6.37E6
 
@@ -56,7 +56,9 @@ def realignment(longitude, source_sat):
 # Distance between deg of longitude is 111.32km.
 # Distance between deg of latitude is 111km.
 def calcDistanceBetween(source_loc, dest_loc):
-    distance = np.sqrt((((source_loc[0] - dest_loc[0])*111.32E3)**2)+(((source_loc[1] - dest_loc[1])*111E3)**2))
+    # distance = np.sqrt((((source_loc[0] - dest_loc[0])*111.32E3)**2)+(((source_loc[1] - dest_loc[1])*111E3)**2))
+    # distance = np.linalg.norm([source_loc, dest_loc])
+    distance = np.sqrt((source_loc[0] - dest_loc[0])**2+(source_loc[1] - dest_loc[1])**2+(source_loc[2] - dest_loc[2])**2)
     return distance
 
 
@@ -68,7 +70,7 @@ def drawEdges(section, sat1, planedfs, fig):
 
 def plotPath(shortest_path, positions, fig=None, all_edges=None):
     if not fig:
-        fig = go.Figure(go.Scattergeo( 
+        fig = go.Figure(go.Scattermapbox( 
                         lon=[],lat=[],
                         ))
     for section in range(1,2):
@@ -86,7 +88,7 @@ def plotPath(shortest_path, positions, fig=None, all_edges=None):
         for i in range(len(shortest_path)-1):
             source = shortest_path[i]
             destination = shortest_path[i+1]
-            fig.add_trace(go.Scattergeo(
+            fig.add_trace(go.Scattermapbox(
                 lon=[positions[source][0], positions[destination][0]],
                 lat=[positions[source][1], positions[destination][1]],
                 mode="lines",
@@ -97,7 +99,7 @@ def plotPath(shortest_path, positions, fig=None, all_edges=None):
             for i in range(len(all_edges)-1):
                 source, destination = all_edges[i]
                 # destination = shortest_path[i+1]
-                fig.add_trace(go.Scattergeo(
+                fig.add_trace(go.Scattermapbox(
                     lon=[positions[source][0], positions[destination][0]],
                     lat=[positions[source][1], positions[destination][1]],
                     mode="lines",
@@ -105,7 +107,31 @@ def plotPath(shortest_path, positions, fig=None, all_edges=None):
                     ))
 
     return fig
+
+def plotCircle(R, centre, fig):
+    thetas = np.linspace(0,2*math.pi, 100)
+    # centre = [-74,40.7]
+    R = R/111E3
+    xs = [centre[0] + R*math.cos(theta) for theta in thetas]
+    ys = [centre[1] + R*math.sin(theta) for theta in thetas]
+
+    fig.add_trace(go.Scattermapbox(
+                lon=xs,
+                lat=ys,
+                mode="lines",
+                line=dict(width=2, color='green') 
+                ))
+    return fig
+            # bearing=0,
+            # center=dict(
+            #     lat=45.8257,
+            #     lon=10.8746, 
+            # ),
+            # pitch=0,
+            # zoom=5.6,
+            # style='outdoors')
+    # )
     # fig.show()
 
-
+# print(calcDistanceBetween(0,10))
 # plot()

@@ -5,7 +5,7 @@ from vpython import *
 import numpy as np
 import time
 import threading
-from geometry import *
+from geometry import rad, deg, cart2geo, cart2polar, polar2cart, rotate_orbit, Phases, colourdict, speed
 import pickle as pck
 import csv
 # from flatsim import *
@@ -57,28 +57,42 @@ def orbit(sats, section, run_rate=1):
     dt = 1
     period = (np.sqrt((4*(math.pi**2)*((altitude+earth.radius)**3))/(G*earth.mass)))
     plane = [pos for pos in sats ]
-    graphdict = {}
+
     positions = {}
     orbit = []
-    while t<5000:
+    plane_positions = []
+    for i, object in zip(np.arange(0,len(plane)), plane):
+        new_pos(object, dt)
+        pos = object.pos
+        plane_positions.append([pos.x, pos.y, pos.z])
+        orbit.append([t,[pos.x, pos.y, pos.z]])
+    positions[str(t)] = plane_positions
+    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/plane_positions.pck', 'wb') as f:
+        pck.dump([t,plane_positions], f)
+    while True:
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
-        rate(100*len(sats)*run_rate)
+        # rate(100*len(sats)*run_rate)
         plane_positions = []
         for i, object in zip(np.arange(0,len(plane)), plane):
             new_pos(object, dt)
             pos = object.pos
             plane_positions.append([pos.x, pos.y, pos.z])
-        time.sleep(1/speed)
+            # orbit.append([t,[pos.x, pos.y, pos.z]])
+        # time.sleep(1 /speed)
         t=t+dt
-        if t%100==0:
+        if t%1000==0:
             print(t)    
+        if t > 1000:
+            break
         positions[str(t)] = plane_positions
-        with open('data/plane_positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb') as f:
+        with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/plane_positions.pck', 'wb') as f:
             pck.dump([t,plane_positions], f)
-    with open('data/positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb') as f:
+    print(t)
+    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/positions.pck', 'wb') as f:
         pck.dump(positions, f)
-    with open('orbit.pck', 'wb') as f:
+    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/orbit.pck', 'wb') as f:
         pck.dump(orbit, f)
+    print('files saved')
 
 
 def new_pos(object, dt):
@@ -89,14 +103,16 @@ def new_pos(object, dt):
     pos =object.pos+object.velocity*dt
     # Rotate the theta position by 1/240 deg (earths rotation per second)
     r, theta, phi = cart2polar(pos.x, pos.y, pos.z)
-    rotated_position = polar2cart(r, rotate_orbit(theta, pos.x), phi)
-    object.pos = vec(rotated_position[0], rotated_position[1], rotated_position[2])
-
+    # rotated_position = polar2cart(r, rotate_orbit(theta, pos.x), phi)
+    # object.pos = vec(rotated_position[0], rotated_position[1], rotated_position[2])
+    object.pos = pos
+    # object.orbit.append(pos=object.pos)
     return object
 
 def initial_plane(object, no_of_sats, period, plane_number, total_planes, section):
     plane_sats = []
     phase_offset = Phases['Offset'][section-1]
+    # phase_offset = 0
     offset = phase_offset/72 * (period/no_of_sats)
     force_gravity = vector(0,0,0)
     t = 0
@@ -126,17 +142,17 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, sectio
         if t in intervals:
             # print(velocity)
             positions.append([coords, velocity])
-            starting_positions.append([longitude, latitude])
+            starting_positions.append(coords)
         t=t+dt
     for j in positions:
         pos = j[0]
         sat = plot_satellite(j[0], j[1], colourdict[section][1])
-        if (plane_number != 0) and (plane_number != total_planes/2):
-            sat.visible = False
+        # if (plane_number != 0) and (plane_number != total_planes/2):
+        #     sat.visible = False
         plane_sats.append(sat)
-    c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=100E2)
-    c = curve(color=color.green, radius=100E2)
-    [c.append(x) for x in orbit]
+    # c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=200E2)
+    # c = curve(color=color.green, radius=100E2)
+    # [c.append(x) for x in orbit]
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(section):
@@ -169,12 +185,12 @@ def phase(section):
         plane_sats, longitudes, latitudes, starting_positions = initial_plane(initial_sat,sats_per_plane, period, i, no_of_planes, section)
         all_latitudes.append(latitudes)
         all_longitudes.append(longitudes) 
-        all_initial_pos.append(starting_positions)
+        [all_initial_pos.append(i) for i in starting_positions]
         
         for j in plane_sats:
             sats.append(j)
-            
-    with open('data/planes'+str(section)+'.pck', 'wb') as f:
-        pck.dump([all_longitudes, all_latitudes, section, all_initial_pos], f)
+    t=0
+    with open('data/plane_positions'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'wb') as f:
+            pck.dump([t,all_initial_pos], f)
     return sats
 

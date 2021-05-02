@@ -7,6 +7,7 @@ import pickle as pck
 import pandas as pd
 from copy import deepcopy 
 import sys
+import plotly.graph_objects as go
 
 def rad(x):
     return (x*math.pi/180)
@@ -20,23 +21,24 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 4: ['purple', [128, 0, 128]], 
                 5: ['hotpink', [255, 105, 180]]}
 
-# Phases = {'Planes': [72, 72, 36, 6, 4] , 
-#             'Sats per plane': [22, 22, 20, 58, 43] , 
-#             'Inclination': [53, 53.2, 70, 97.6, 97.6], 
-#             'Altitude': [550E3, 540E3, 570E3, 560E3, 560E3]}
+Phases = {'Planes': [72, 72, 36, 6, 4] , 
+            'Sats per plane': [22, 22, 20, 58, 43] , 
+            'Inclination': [53, 53.2, 70, 97.6, 97.6], 
+            'Altitude': [550E3, 540E3, 570E3, 560E3, 560E3],
+            'Offset': [49, 5]}
 earth_radius = 6.37E6
 
-Phases = {'Planes': [72, 6],
-            'Sats per plane': [22, 20],
-            'Inclination': [53,76],
-            'Altitude': [1150E3, 570E3],
-            'Offset': [49, 5]}
+# Phases = {'Planes': [72, 6],
+#             'Sats per plane': [22, 20],
+#             'Inclination': [53,76],
+#             'Altitude': [550E3, 570E3],
+#             'Offset': [5, 5]}
 
 # calculates features for the phase depending on the altitude.
-Phases['max comms range'] = [np.sqrt(((earth_radius+Phases['Altitude'][0])**2) - (earth_radius**2)), 
-                            np.sqrt(((earth_radius+Phases['Altitude'][1])**2) - (earth_radius**2))]
-Phases['max ground reach'] = [Phases['Altitude'][0]*math.tan(rad(40)),
-                            Phases['Altitude'][1]*math.tan(rad(40))]
+Phases['max comms range'] = [(np.sqrt((((earth_radius+10E3)+Phases['Altitude'][0])**2) - ((earth_radius+10E3)**2))), 
+                            (np.sqrt((((earth_radius+10E3)+Phases['Altitude'][1])**2) - ((earth_radius+10E3)**2)))]
+Phases['max ground reach'] = [Phases['Altitude'][0]*math.tan(rad(50)),
+                            Phases['Altitude'][1]*math.tan(rad(50))]
 
 # Some popular locations defined by geographical coordinates
 Locations = {'London': [-0.13, 51.5],
@@ -44,21 +46,15 @@ Locations = {'London': [-0.13, 51.5],
             'New York': [-74.0, 40.7], 
             'Singapore': [103.8, 1.35]}
 
+section = 1
 try:    
     print('Reading positions file....')
-    positions = pck.load(open('data/positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
+    positions = pck.load(open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/positions.pck', 'rb'))
     print('File opened.')
 except:
-    pck.dump([], open('data/positions'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
+    pck.dump([], open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/positions.pck', 'wb'))
 
-# try:
-#     print('Reading graphdict file....')
-#     graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
-#     print('File opened.')
-# except:
-#     pck.dump([], open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
-
-speed = 10
+speed = 5
     
 
 
@@ -128,42 +124,42 @@ def cart2polar(x, y, z):
     return r, theta, phi
 
 
-def cart2geo(x, y, z):
+def cart2geo(x, y, z, time=0, rotation=True):
     # print(x,y,z)
     r, theta, phi = cart2polar(x, y, z)
     longitude, latitude = polar2geo(r, theta, phi,x,y,z)
-    return np.round(longitude,2), np.round(latitude,2)
+    if rotation:
+        return np.round(longitude + time/240,2), np.round(latitude,2)
+    else:
+        return np.round(longitude), np.round(latitude,2)
 
 def fetch_locs(deployment,t):
-    df = pd.DataFrame({
-        'Plane': []
-    })
+
     longitudes = []
     latitudes = []
     # no_of_planes = plane_positions[0][0]
     # sats_per_plane = plane_positions[0][1]
     # print(len(positions[str(t)]))
     for i in positions[str(t)]:
-        lon, lat = cart2geo(i[0], i[1], i[2])
+        lon, lat = cart2geo(i[0], i[1], i[2],t)
         longitudes.append(lon)
         latitudes.append(lat)
     return longitudes, latitudes
 
 def fetch_curr(section):
-    df = pd.DataFrame({
-        'Plane': []
-    })
     longitudes = []
     latitudes = []
-    plane_positions = pck.load(open('data/plane_positions'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb'))
+    plane_positions = pck.load(open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/plane_positions.pck', 'rb'))
     # no_of_planes = plane_positions[0][0]
     # sats_per_plane = plane_positions[0][1]
     for i in plane_positions[1]:
-        lon, lat = cart2geo(i[0], i[1], i[2])
+        lon, lat = cart2geo(i[0], i[1], i[2], plane_positions[0])
         longitudes.append(lon)
         latitudes.append(lat)
     return longitudes, latitudes, plane_positions[0]
 
+def fetch_cart(section, time):
+    return positions[str(time)]
 # This function takes the current position of a satellite and adjusts it to match the earths rotation.
 def rotate_orbit(theta, x):
     old_theta = theta
@@ -178,18 +174,40 @@ def rotate_orbit(theta, x):
         else:
             theta = 360 + deg(theta)
 
-    return rad(theta-1/240)
+    return rad(theta+1/240)
 
 
 def fetch_orbit():
-    orbital_path = pck.load(open('data/orbit.pck', 'rb'))
-    longitudes = [x[0] for x in orbital_path]
-    latitudes = [x[1] for x in orbital_path]
+    orbit = pck.load(open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/orbit.pck', 'rb'))
+    longitudes, latitudes = [], []
+    for t, v in orbit:
+        # time, v = pos
+        lon, lat = cart2geo(v[0],v[1],v[2], t)
+        longitudes.append(lon)
+        latitudes.append(lat)
     return longitudes, latitudes
 
 def calcDistanceBetween(source_loc, dest_loc):
     distance = np.sqrt((((source_loc[0] - dest_loc[0])*111.32E3)**2)+(((source_loc[1] - dest_loc[1])*111E3)**2))
     return distance
+
+def calcGCR(source_loc, dest_loc):
+    lon1, lat1 = source_loc
+    lon2, lat2 = dest_loc
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a)) 
+    r = 6371E3 # Radius of earth in kilometers. Use 3956 for miles
+    return c * r
 
 def find_sat(source, positions):
     section=1
@@ -200,22 +218,73 @@ def find_sat(source, positions):
 
     temp_lons = deepcopy(lon_distances)
     temp_lats = deepcopy(lat_distances)
-    try:
-        while True:
-            closest_lon = lon_distances.index(min(temp_lons))
-            closest_lat = lat_distances.index(min(temp_lats))
-            # print(closest_lon, closest_lat, positions[closest_lon], positions[closest_lat])
-
-            if calcDistanceBetween(source, positions[closest_lon]) < Phases['max ground reach'][section-1]:
+    # try:
+    while True:
+        closest_lon = lon_distances.index(min(temp_lons))
+        closest_lat = lat_distances.index(min(temp_lats))
+        # print(closest_lon, closest_lat, positions[closest_lon], positions[closest_lat])
+        closest_lon_distance = calcGCR(source, positions[closest_lon])
+        closest_lat_distance = calcGCR(source, positions[closest_lat])
+        if closest_lon_distance <= closest_lat_distance:
+            if closest_lon_distance < Phases['max ground reach'][section-1]:
                 # print('Sat Found!')
-                return closest_lon
+                return closest_lon, np.sqrt(closest_lon_distance**2 + Phases['Altitude'][section-1]**2)
             else:
                 temp_lons.pop(temp_lons.index(min(temp_lons)))
-            if calcDistanceBetween(source, positions[closest_lat]) < Phases['max ground reach'][section-1]:
-                # print('Sat Found!')
-                return closest_lat
-            else:
                 temp_lats.pop(temp_lats.index(min(temp_lats)))
-    except ValueError:
-        print('The requested ground position does not have a satellite close enough to communicate!')
-        sys.exit(1)
+        else:
+            if closest_lat_distance < Phases['max ground reach'][section-1]:
+                # print('Sat Found!')
+                return closest_lat, np.sqrt(closest_lat_distance**2 + Phases['Altitude'][section-1]**2)
+            else:
+                temp_lons.pop(temp_lats.index(min(temp_lats)))
+                temp_lats.pop(temp_lons.index(min(temp_lons)))
+    # except ValueError:
+    #     print('The requested ground position does not have a satellite close enough to communicate!')
+        # sys.exit(1)
+
+def findrange(source, positions, fig):
+    section=1
+    temp_pos = deepcopy(positions)
+    source_lon, source_lat = source
+    lon_distances = [abs(source_lon - i[0]) for i in positions]
+    lat_distances = [abs(source_lat - i[1]) for i in positions]
+
+    temp_lons = deepcopy(lon_distances)
+    temp_lats = deepcopy(lat_distances)
+    edges = []
+    # try:
+    for i in range(len(temp_lons)):
+        closest_lon = lon_distances.index(min(temp_lons))
+        closest_lat = lat_distances.index(min(temp_lats))
+        # print(closest_lon, closest_lat, positions[closest_lon], positions[closest_lat])
+        closest_lon_distance = calcGCR(source, positions[closest_lon])
+        closest_lat_distance = calcGCR(source, positions[closest_lat])
+        # if closest_lon_distance <= closest_lat_distance:
+        if closest_lon_distance < Phases['max ground reach'][section-1]:
+            # print('Sat Found!')
+            edges.append(closest_lon)
+            print(edges)
+        # else:
+            # temp_lons.pop(temp_lons.index(min(temp_lons)))
+            # temp_lats.pop(temp_lats.index(min(temp_lats)))
+    # else:
+        if closest_lat_distance < Phases['max ground reach'][section-1]:
+            # print('Sat Found!')
+            edges.append(closest_lat)
+            print(edges)
+        # else:
+        temp_lats.pop(temp_lats.index(min(temp_lats)))
+        temp_lons.pop(temp_lons.index(min(temp_lons)))
+        
+    print(edges)
+    print(temp_lats)
+    for i in range(len(edges)):
+        dest = edges[i]
+        # destination = shortest_path[i+1]
+        fig.add_trace(go.Scattermapbox(
+            lon=[source_lon, positions[dest][0]],
+            lat=[source_lat, positions[dest][1]],
+            mode="lines",
+            line=dict(width=2, color=colourdict[section][0]) 
+            ))
