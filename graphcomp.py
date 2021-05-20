@@ -8,27 +8,22 @@ import threading
 import numpy as np
 import time as tm
 
-section = 1
-# graphdict = {}
-# plane_positions = pck.load(open('data/positions'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb'))
-# plane_positions = list(zip(np.arange(0,len(plane_positions),1), plane_positions)
-# print(plane_positions['50'])
-def graphFromPos(times, chunk):
-    # with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'rb') as f:
-    #     graphdict = pck.load(f)
+
+def graphFromPos(phasenum, times, chunk):
+
     graphdict = {}
-    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+str(chunk)+'.pck', 'wb') as f:
+    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+str(chunk)+'.pck', 'wb') as f:
         pck.dump(graphdict, f)
     print(times, chunk)
     for i in times:
         if i != 0:
             if i%10 ==0:
                 tic = tm.time()
-                G, positions = createNetworkGraph(i)
+                G, positions = createNetworkGraph(phasenum, i)
                 graphdict[str(i)] = [G, positions]
                 print(i,': ', tm.time()-tic)
                 print(graphdict.keys())
-                with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/'+str(i)+'.pck', 'wb') as f:
+                with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/'+str(i)+'.pck', 'wb') as f:
                     pck.dump(graphdict[str(i)], f)
     print('saved')
         
@@ -38,27 +33,13 @@ def chunks(lst,workers=4):
     for i in range(0, len(lst), n):
             yield lst[i:i + n]
 
-times = np.arange(0,1000,1)
-# times = [int(i) for i in times[0:100]]
-times = chunks(times)
-# print(times)
-if __name__ == '__main__':
-    jobs = []
-    for i, chunk in zip(times,[0,1,2,3]):
-        p = mp.Process(target=graphFromPos, args=(i,chunk,))
-        jobs.append(p)
-        p.start()
 
-
-# with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+str(1)+'.pck', 'rb') as f:
-#         graphdict = pck.load(f)
-#         print(graphdict.keys())
-       
-# graphdict0 = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+str(0)+'.pck', 'rb'))
-# graphdict1 = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+str(1)+'.pck', 'rb'))
-# graphdict2 = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+str(2)+'.pck', 'rb'))
-# graphdict3 = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+str(3)+'.pck', 'rb'))
-# # print(graphdict1.keys())
-# graphdict = {**graphdict0, **graphdict1, **graphdict2, **graphdict3}
-# with open('data/graphdict'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'wb') as f:
-#         pck.dump(graphdict, f)
+def compute_graphs(time_limit=1000, phasenum=1)
+    times = np.arange(0,time_limit,1)
+    times = chunks(times)
+    if __name__ == '__main__':
+        jobs = []
+        for i, chunk in zip(times,[0,1,2,3]):
+            p = mp.Process(target=graphFromPos, args=(phasenum, i,chunk,))
+            jobs.append(p)
+            p.start()

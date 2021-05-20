@@ -5,11 +5,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
-from geometry import fetch_curr, colourdict, Locations, Phases
+from sim_utils import fetch_curr, fetch_locs, colourdict, Locations, Phases
 import webbrowser
-from dijkstra import plotPath, plotCircle
+from path_utils import plotPathgeo
 import numpy as np 
-from network import calcPath, onePlot
+from network import calcPath
 import pickle as pck 
 import time as tm
 
@@ -17,15 +17,6 @@ import time as tm
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 mapbox_access_token = open(".mapbox_token").read()
-
-
-
-graphdict = {}
-section=1
-print('reading dicts')
-for i in np.arange(10,1000, 10):
-    graphdict[str(i)] = pck.load(open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/'+str(i)+'.pck', 'rb'))
-print('dicts read')
 
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -41,21 +32,11 @@ app.layout = html.Div(
         )
     ])
 )
-# try:
-#     print('Reading graphdict file....')
-#     graphdict = pck.load(open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'rb'))
-#     print('File opened.')
-# except:
-#     pck.dump([], open('data/graphdict'+str(int(Phases['Altitude'][1-1]/1E3))+'.pck', 'wb'))
 
-# Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
 
 def update_graph_live(n):
-    # print(n)
-    # Initialise plot
-    # onePlot('New York', 'London')
     fig = go.Figure(
                 data=[go.Scattermapbox(lon=[], lat=[],
                     name="frame",
@@ -73,48 +54,38 @@ def update_graph_live(n):
                     'xanchor': 'center',
                     'yanchor': 'top'}
                     ))
-    # if time!=0:
-    for i in range(1,2):
-        longitudes, latitudes, time = fetch_curr(i)
+    for phasenum in range(1,2):
+        longitudes, latitudes, time = fetch_curr(phasenum)
         fig.add_trace(go.Scattermapbox(lon=longitudes, lat=latitudes,
                         name="frame",
                         mode="markers",
-                        marker=go.scattermapbox.Marker(size=5, color=colourdict[i])))
+                        marker=go.scattermapbox.Marker(size=5, color=colourdict[phasenum][0])))
 
         # for live dijkstra plotting when all positions have been calculated
-        source = Locations['London']
-        destination = Locations['Johannesburg']
-        plotCircle(Phases['max ground reach'][i], source[0], source[0])
+        source = Locations['LDN']
+        destination = Locations['SIN']
         fig.add_trace(go.Scattermapbox(lon=[source[0], destination[0]], lat=[source[1], destination[1]],
                         name="frame",
                         mode="markers",
                         marker=go.scattermapbox.Marker(size=10, color='green')))
-        shortest_path, positions = calcPath(source, destination, int(np.floor(time/10)*10), graphdict)
-        # shortest_path = calcPath(source, destination, time, graphdict)
+        rtt, path, positions = calcPath(phasenum, source, destination, int(np.floor(time/10)*10))
 
         fig.add_annotation(
-            text="Time Elapsed: "+str(time)+"s, Shortest Path Latency: "+str(np.round(shortest_path[0]/300E3,3))+"ms",#, Path: "+str([str(i) for i in shortest_path[1]]),
+            text="Time Elapsed: "+str(time)+"s, Round Trip Time: "+str(2*np.round(rtt/300E3,3))+"ms",#, Path: "+str([str(i) for i in shortest_path[1]]),
             showarrow=False,
             yshift=-340, font=dict(size=18))
         fig.add_annotation(
-            text="Path: "+str([str(i) for i in shortest_path[1]])+', Hop count: '+str(len(shortest_path[1])),
+            text="Path: "+str([str(i) for i in path])+', Hop count: '+str(len(path)),
             showarrow=False,
             yshift=-370, font=dict(size=18))
-        fig = plotPath(shortest_path[1], positions, fig)
+        fig = plotPathgeo(source, destination, phasenum, path, positions, fig)
         fig.update_layout(showlegend=False,  
         mapbox=dict(
             accesstoken=mapbox_access_token, 
             style='light',
             zoom=1.4))
-    # except:
-    #     pass
 
     return fig
-
-# port = 8050 # or simply open on the default `8050` port
-
-# def open_browser():
-# 	webbrowser.open_new("http://localhost:{}".format(port))
 
 def begin_dash():
     if __name__ == '__main__':

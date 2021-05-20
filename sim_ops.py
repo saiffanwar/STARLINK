@@ -5,12 +5,10 @@ from vpython import *
 import numpy as np
 import time
 import threading
-from geometry import rad, deg, cart2geo, cart2polar, polar2cart, rotate_orbit, Phases, colourdict, speed
+from geometry import rad, deg, cart2geo, cart2polar, polar2cart
+from sim_utils import rotate_orbit, Phases, colourdict, speed
 import pickle as pck
-import csv
-# from flatsim import *
-import pandas as pd
-# from network import createNetworkGraph
+
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
 
@@ -19,7 +17,7 @@ precision = -1
 ############## SCENE SETUP ##################
 canvas(title='STARLINK',
     width=1000, height=1500,
-    center=vector(0,0,0))#, background=vector(40/255, 44/255, 51/255))
+    center=vector(0,0,0))
 lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
 
 ######### PHYSICAL PARAMETER SETUP #########
@@ -47,10 +45,10 @@ def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
 
     return satellite
 
-def orbit(sats, section, run_rate=1):
-    no_of_planes = Phases['Planes'][section-1]
-    sats_per_plane = Phases['Sats per plane'][section-1]
-    altitude = Phases['Altitude'][section-1]
+def orbit(sats, phasenum, run_rate=1):
+    no_of_planes = Phases['Planes'][phasenum-1]
+    sats_per_plane = Phases['Sats per plane'][phasenum-1]
+    altitude = Phases['Altitude'][phasenum-1]
 
     force_gravity = vector(0,0,0)
     t = 0
@@ -67,30 +65,31 @@ def orbit(sats, section, run_rate=1):
         plane_positions.append([pos.x, pos.y, pos.z])
         orbit.append([t,[pos.x, pos.y, pos.z]])
     positions[str(t)] = plane_positions
-    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/plane_positions.pck', 'wb') as f:
+    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/plane_positions.pck', 'wb') as f:
         pck.dump([t,plane_positions], f)
     while True:
+        earth.rotate(rad(1/240), axis=vec(0,1,0))
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
-        # rate(100*len(sats)*run_rate)
+        rate(100*len(sats)*run_rate)
         plane_positions = []
         for i, object in zip(np.arange(0,len(plane)), plane):
             new_pos(object, dt)
             pos = object.pos
             plane_positions.append([pos.x, pos.y, pos.z])
-            # orbit.append([t,[pos.x, pos.y, pos.z]])
-        # time.sleep(1 /speed)
+            orbit.append([t,[pos.x, pos.y, pos.z]])
+        time.sleep(1 /speed)
         t=t+dt
         if t%1000==0:
             print(t)    
-        if t > 1000:
+        if t > period:
             break
         positions[str(t)] = plane_positions
-        with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/plane_positions.pck', 'wb') as f:
+        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/plane_positions.pck', 'wb') as f:
             pck.dump([t,plane_positions], f)
     print(t)
-    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/positions.pck', 'wb') as f:
+    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'wb') as f:
         pck.dump(positions, f)
-    with open('data/'+str(int(Phases['Altitude'][section-1]/1E3))+'/orbit.pck', 'wb') as f:
+    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/orbit.pck', 'wb') as f:
         pck.dump(orbit, f)
     print('files saved')
 
@@ -98,22 +97,16 @@ def orbit(sats, section, run_rate=1):
 def new_pos(object, dt):
     force_gravity = -G*earth.mass*object.mass/(mag(object.pos-earth.pos)**2)*norm(object.pos-earth.pos)
     object.acceleration = force_gravity/object.mass
-
     object.velocity=object.velocity+object.acceleration*dt
     pos =object.pos+object.velocity*dt
-    # Rotate the theta position by 1/240 deg (earths rotation per second)
     r, theta, phi = cart2polar(pos.x, pos.y, pos.z)
-    # rotated_position = polar2cart(r, rotate_orbit(theta, pos.x), phi)
-    # object.pos = vec(rotated_position[0], rotated_position[1], rotated_position[2])
     object.pos = pos
-    # object.orbit.append(pos=object.pos)
+
     return object
 
-def initial_plane(object, no_of_sats, period, plane_number, total_planes, section):
+def initial_plane(object, no_of_sats, period, plane_number, total_planes, phasenum, phase_offset):
     plane_sats = []
-    phase_offset = Phases['Offset'][section-1]
-    # phase_offset = 0
-    offset = phase_offset/72 * (period/no_of_sats)
+    offset = phase_offset/total_planes * (period/no_of_sats)
     force_gravity = vector(0,0,0)
     t = 0
     dt = 10**(-precision)
@@ -140,29 +133,25 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, sectio
         longitudes.append(longitude)
         latitudes.append(latitude)
         if t in intervals:
-            # print(velocity)
             positions.append([coords, velocity])
             starting_positions.append(coords)
         t=t+dt
     for j in positions:
         pos = j[0]
-        sat = plot_satellite(j[0], j[1], colourdict[section][1])
-        # if (plane_number != 0) and (plane_number != total_planes/2):
-        #     sat.visible = False
+        sat = plot_satellite(j[0], j[1], colourdict[phasenum][1])
+
         plane_sats.append(sat)
-    # c = curve(color=vector(colourdict[section][1][0]/255, colourdict[section][1][1]/255, colourdict[section][1][2]/255), radius=200E2)
-    # c = curve(color=color.green, radius=100E2)
-    # [c.append(x) for x in orbit]
+        
     return plane_sats, longitudes, latitudes, starting_positions
 
-def phase(section):
-    no_of_planes = Phases['Planes'][section-1]
-    sats_per_plane = Phases['Sats per plane'][section-1]
-    inclination = Phases['Inclination'][section-1]
-    altitude = Phases['Altitude'][section-1]
+def phase(phasenum, phase_offset=Phases['Offset'][0]):
+    no_of_planes = Phases['Planes'][phasenum-1]
+    sats_per_plane = Phases['Sats per plane'][phasenum-1]
+    inclination = Phases['Inclination'][phasenum-1]
+    altitude = Phases['Altitude'][phasenum-1]
 
     thetas = np.linspace(0,360,no_of_planes+1)
-    if section ==2:
+    if phasenum ==2:
         thetas = np.linspace((360/no_of_planes)/2,360+ (360/no_of_planes)/2,no_of_planes+1)
     thetas = thetas[:-1]
     sats = []
@@ -182,7 +171,7 @@ def phase(section):
             velocity = speed*norm(hat(vector(1,0,(-x/z))))
         initial_sat = plot_satellite(coords, velocity)
         initial_sat.visible = False
-        plane_sats, longitudes, latitudes, starting_positions = initial_plane(initial_sat,sats_per_plane, period, i, no_of_planes, section)
+        plane_sats, longitudes, latitudes, starting_positions = initial_plane(initial_sat,sats_per_plane, period, i, no_of_planes, phasenum, phase_offset)
         all_latitudes.append(latitudes)
         all_longitudes.append(longitudes) 
         [all_initial_pos.append(i) for i in starting_positions]
@@ -190,7 +179,8 @@ def phase(section):
         for j in plane_sats:
             sats.append(j)
     t=0
-    with open('data/plane_positions'+str(int(Phases['Altitude'][section-1]/1E3))+'.pck', 'wb') as f:
+    with open('data/plane_positions'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'.pck', 'wb') as f:
             pck.dump([t,all_initial_pos], f)
     return sats
 
+    

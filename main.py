@@ -1,7 +1,6 @@
 from sim_ops import phase, orbit
 import os
 import threading
-import numpy as np
 #All LEO satellites
 
 phase_sats1 = phase(1)
@@ -15,6 +14,6 @@ threading.Thread(target=orbit, args=(phase_sats1, 1)).start()
 # threading.Thread(target=orbit, args=(sats, 3)).start()
 # threading.Thread(target=orbit, args=(sats, 4)).start()
 # threading.Thread(target=orbit, args=(sats, 5)).start()
-
-# os.system('python app.py')
-
+# begin_dash()
+os.system('python app.py')
+# 
