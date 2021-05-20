@@ -1,12 +1,15 @@
 from network import createNetworkGraph
 import pickle as pck
-from geometry import Phases
+# from geometry import Phases
+from sim_utils import Phases
 from pprint import pprint
 import multiprocessing as mp
 from tqdm import tqdm
 import threading
 import numpy as np
 import time as tm
+import argparse
+import os
 
 
 def graphFromPos(phasenum, times, chunk):
@@ -34,7 +37,7 @@ def chunks(lst,workers=4):
             yield lst[i:i + n]
 
 
-def compute_graphs(time_limit=1000, phasenum=1)
+def compute_graphs(time_limit, phasenum=1):
     times = np.arange(0,time_limit,1)
     times = chunks(times)
     if __name__ == '__main__':
@@ -43,3 +46,6 @@ def compute_graphs(time_limit=1000, phasenum=1)
             p = mp.Process(target=graphFromPos, args=(phasenum, i,chunk,))
             jobs.append(p)
             p.start()
+
+# os.system('python3 startsim.py  --pathfinder OFF --time_limit '+str(args.time))
+# compute_graphs()

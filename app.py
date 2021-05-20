@@ -68,8 +68,8 @@ def update_graph_live(n):
                         name="frame",
                         mode="markers",
                         marker=go.scattermapbox.Marker(size=10, color='green')))
+        
         rtt, path, positions = calcPath(phasenum, source, destination, int(np.floor(time/10)*10))
-
         fig.add_annotation(
             text="Time Elapsed: "+str(time)+"s, Round Trip Time: "+str(2*np.round(rtt/300E3,3))+"ms",#, Path: "+str([str(i) for i in shortest_path[1]]),
             showarrow=False,

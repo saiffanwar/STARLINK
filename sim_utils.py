@@ -1,7 +1,7 @@
 from geometry import *
 import pickle as pck
 from copy import deepcopy
-
+from pathlib import Path
 
 colourdict = {1 : ['red', [255, 0, 0] ], 
                 2 : ['green', [0, 255, 0]], 
@@ -9,12 +9,10 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 4: ['purple', [128, 0, 128]], 
                 5: ['hotpink', [255, 105, 180]]}
 
-Phases = {'Planes': [72, 72, 36, 6, 4] , 
-            'Sats per plane': [22, 22, 20, 58, 43] , 
-            'Inclination': [53, 53.2, 70, 97.6, 97.6], 
-            'Altitude': [550E3 ,540E3, 570E3, 560E3, 560E3],
-            'Offset': [9, 5,3,3,1]}
+FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
 
+Phases = FeatureDict['Phase Features']
+speed = FeatureDict['Speed']
 earth_radius = 6.37E6
 
 # Phases = {'Planes': [32, 6],
@@ -40,11 +38,20 @@ Locations = {'LDN': [-0.13, 51.5],
 phasenumPos = {}
 for phasenum in range(1,2):
     # print('Reading positions file....')
-    phasenumPos[str(phasenum)] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'rb'))
-    # print('File opened.')
+    try:
+        phasenumPos[str(phasenum)] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'rb'))
+    except:
+        Path('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))).mkdir(parents=True, exist_ok=True)
+        pck.dump([], open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'wb'))
+        phasenumPos[str(phasenum)] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'rb'))
 
+    try:
+        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/0.pck', 'rb') as file:
+            pck.load(file)
+        file.close()
+    except:
+        print('GRAPH ERROR: The graphs for this configuration have not been computed therefore the network paths will not work.')
 
-speed = 10
 
 def fetch_locs(phasenum,t):
 
