@@ -37,7 +37,7 @@ c = curve(color=color.blue, radius=100E2)
 
 def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     x, y, z = coords
-    satellite = sphere(pos=vector(x,y,z), radius = 500E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
+    satellite = sphere(pos=vector(x,y,z), radius = 1000E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
     satellite.mass = 250
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
@@ -46,6 +46,7 @@ def plot_satellite(coords, velocity=0, rgb=[255, 0, 0]):
     return satellite
 
 def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
+    print('Starting orbit')
     no_of_planes = Phases['Planes'][phasenum-1]
     sats_per_plane = Phases['Sats per plane'][phasenum-1]
     altitude = Phases['Altitude'][phasenum-1]
@@ -143,7 +144,8 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, phasen
         sat = plot_satellite(j[0], j[1], colourdict[phasenum][1])
 
         plane_sats.append(sat)
-        
+    c = curve(color=color.green, radius=100E2)
+    [c.append(x) for x in orbit]
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(phasenum, phase_offset=Phases['Offset'][0]):
