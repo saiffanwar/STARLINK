@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description='Simulation setup')
 
 parser.add_argument('--phasenums', default=1,
                     help='number of phases to deploy in the simulation')
-parser.add_argument('--time_limit', default=100000,
+parser.add_argument('--time_limit', default=10000,
                     help='number of phases to deploy in the simulation')
 parser.add_argument('--pathfinder', default='ON',
                     help='number of phases to deploy in the simulation')
