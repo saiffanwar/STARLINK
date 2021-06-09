@@ -9,7 +9,7 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 4: ['purple', [128, 0, 128]], 
                 5: ['hotpink', [255, 105, 180]]}
 
-FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
+FeatureDict = pck.load(open('simFeatures.pck', 'rb'))
 
 Phases = FeatureDict['Phase Features']
 speed = FeatureDict['Speed']
