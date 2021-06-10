@@ -91,3 +91,4 @@ websocket-client==1.0.0
 Werkzeug==2.0.1
 widgetsnbextension==3.5.1
 yarl==1.6.3
+tqdm

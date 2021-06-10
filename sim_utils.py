@@ -50,7 +50,8 @@ for phasenum in range(1,2):
             pck.load(file)
         file.close()
     except:
-        print('GRAPH ERROR: The graphs for this configuration have not been computed therefore the network paths will not work.')
+        print('GRAPH WARNING: The graphs for this configuration have not been computed therefore the network paths will not work.')
+        # pass
 
 
 def fetch_locs(phasenum,t):

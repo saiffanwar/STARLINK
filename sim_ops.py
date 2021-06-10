@@ -8,7 +8,7 @@ import threading
 from geometry import rad, deg, cart2geo, cart2polar, polar2cart
 from sim_utils import rotate_orbit, Phases, colourdict, speed
 import pickle as pck
-from graphcomp import compute_graphs
+# from graphcomp import compute_graphs
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
 
@@ -93,8 +93,8 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
     with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/orbit.pck', 'wb') as f:
         pck.dump(orbit, f)
     print('files saved')
-    if getGraphs:
-        compute_graphs(time_limit)        
+    # if getGraphs:
+    #     compute_graphs(time_limit)        
 
 
 def new_pos(object, dt):

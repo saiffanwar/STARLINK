@@ -3,11 +3,27 @@ import networkx as nx
 import pandas as pd
 import pickle as pck
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from path_utils import plotPathgeo
 from sim_utils import find_sat, fetch_locs, fetch_curr, fetch_cart, calcDistanceBetween, Phases, colourdict, Locations, findrange
 import time as tm
 from copy import deepcopy
+
+
+# def createNetworkGraph(phasenum, time):
+#     longitudes, latitudes = fetch_locs(phasenum, time)
+#     positions = fetch_cart(phasenum, time)
+#     G=nx.Graph()
+#     geopositions = list(zip(longitudes, latitudes))
+#     for source_sat in range(len(positions)):
+#         source_loc = positions[source_sat]
+#         for neighbour_sat in range(len(positions)):
+#             neighbour_loc = positions[neighbour_sat]
+#             distance = np.round(calcDistanceBetween(source_loc, neighbour_loc),0)
+
+#             if distance < Phases['max comms range'][phasenum-1]:
+#                 G.add_edge(source_sat,neighbour_sat, weight=distance)
+#     return G, geopositions
 
 def createNetworkGraph(phasenum, time):
     longitudes, latitudes = fetch_locs(phasenum, time)
@@ -15,13 +31,25 @@ def createNetworkGraph(phasenum, time):
     G=nx.Graph()
     geopositions = list(zip(longitudes, latitudes))
     for source_sat in range(len(positions)):
-        source_loc = positions[source_sat]
-        for neighbour_sat in range(len(positions)):
-            neighbour_loc = positions[neighbour_sat]
-            distance = np.round(calcDistanceBetween(source_loc, neighbour_loc),0)
+        satnum = divmod(source_sat, Phases['Sats per plane'][phasenum-1])
+        if satnum[1] != 0 and Phases['Sats per plane'][phasenum-1]:
+            satbefore = satnum[1] - 1
+            satafter = satnum[1] +1
+        elif satnum[1] == 0:
+            satafter = 1
+            satbefore = Phases['Sats per plane'][phasenum-1]
+        elif satnum[1] == Phases['Sats per plane'[phasenum-1]]:
+            satafter = 0
+            satbefore = Phases['Sats per plane'][phasenum-1] -1
+        neighbours = [satnum[0]*Phases['Sats per plane'][phasenum-1] + satafter, satnum[0]*Phases['Sats per plane'][phasenum-1] + satbefore]
+        print(neighbours)
+        # for neighbour_sat in range(len(positions)):
+        #     neighbour_loc = positions[neighbour_sat]
+        #     distance = np.round(calcDistanceBetween(source_loc, neighbour_loc),0)
 
-            if distance < Phases['max comms range'][phasenum-1]:
-                G.add_edge(source_sat,neighbour_sat, weight=distance)
+            # if distance < Phases['max comms range'][phasenum-1]:
+        G.add_edge(source_sat,satnum[0]*Phases['Sats per plane'][phasenum-1] + satafter, weight=0)
+        G.add_edge(source_sat,satnum[0]*Phases['Sats per plane'][phasenum-1] + satbefore, weight=0)
     return G, geopositions
 
 def calcPath(phasenum, source, destination, time, graphdict=None):
@@ -95,10 +123,10 @@ def onePlot(loc1, loc2, time):
 
 
 # The code below can be used to observe the Network graph at a specific timepoint. They are humanly incomprehensible.
-# [G, positions] = createNetworkGraph(0)
-# [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(0)+'.pck', 'rb'))
+# [G, positions] = createNetworkGraph(1,0)
+# # [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(0)+'.pck', 'rb'))
 
-# pos = nx.spiral_layout(G)
+# pos = nx.circular_layout(G)
 # labels = nx.get_edge_attributes(G,'weight')
 # nx.draw_networkx_labels(G,pos,font_size=10,font_family='sans-serif')
 # nx.draw_networkx_edges(G,pos)

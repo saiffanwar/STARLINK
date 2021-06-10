@@ -32,6 +32,6 @@ for i in phase_sats:
         threading.Thread(target=orbit, args=(i, 1, int(args.time_limit))).start()
 
 
-# 
+
 if args.pathfinder == 'ON':
     os.system('python app.py')

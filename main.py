@@ -11,12 +11,12 @@ def phase_setup():
 
     Phases = FeatureDict['Phase Features']
     speed = FeatureDict['Speed'] 
-    Phasedict = pd.DataFrame({'Phase Number': [1,2,3,4,5], 
-                                'Altitude': Phases['Altitude'],
-                                'Inclination': Phases['Inclination'],
-                                'Planes': Phases['Planes'],
-                                'Sats per plane': Phases['Sats per plane'],
-                                'Offset': Phases['Offset']})
+    Phasedict = pd.DataFrame({'Phase Number': [1], 
+                                'Altitude': Phases['Altitude'][0],
+                                'Inclination': Phases['Inclination'][0],
+                                'Planes': Phases['Planes'][0],
+                                'Sats per plane': Phases['Sats per plane'][0],
+                                'Offset': Phases['Offset'][0]})
 
     pprint(Phasedict)
     print('Simulation speed: ', str(speed)+'x')
@@ -29,7 +29,8 @@ def phase_setup():
     x = int(input(': '))
 
     if x == 1:
-        editphasenum = int(input('Which phase would you like to edit? (1-5): '))
+        # editphasenum = int(input('Which phase would you like to edit? (1-5): '))
+        editphasenum = 1
         print('Leave the fields blank if you do not wish to change it.')
         new_val = input('Enter a new Altitude (m): ')
         if new_val:
@@ -69,13 +70,14 @@ def phase_setup():
 if __name__ == '__main__':
     phase_setup()
     # phasenums = input('How many phases would you like to deploy?')
-    print('Select mode:')
-    print('(1) Run full simulation')
-    print('(2) Compute graphs')
-    inp = int(input(': '))
-    if inp ==1:
-        phasenums = 1
-        os.system('python3 startsim.py --phasenums '+str(phasenums))
-    elif inp==2:
-        time_limit = input('Which time would you like to compute graphs up to? (seconds): ')
-        os.system('python3 startsim.py --getGraphs ON --time_limit '+str(time_limit))
+    # print('Select mode:')
+    # print('(1) Run full simulation')
+    # print('(2) Compute graphs')
+    # inp = int(input(': '))
+    # if inp ==1:
+    phasenums = 1
+    time_limit = input('How long would you like to run the simulation for? (seconds): ')
+    os.system('python3 startsim.py --phasenums '+str(phasenums)+' --time_limit '+str(time_limit))
+    # elif inp==2:
+    #     time_limit = input('Which time would you like to compute graphs up to? (seconds): ')
+    #     os.system('python3 startsim.py --getGraphs ON --time_limit '+str(time_limit))

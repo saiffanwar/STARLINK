@@ -62,23 +62,24 @@ def update_graph_live(n):
                         marker=go.scattermapbox.Marker(size=5, color=colourdict[phasenum][0])))
 
         # for live dijkstra plotting when all positions have been calculated
-        source = Locations['LDN']
-        destination = Locations['SIN']
-        fig.add_trace(go.Scattermapbox(lon=[source[0], destination[0]], lat=[source[1], destination[1]],
-                        name="frame",
-                        mode="markers",
-                        marker=go.scattermapbox.Marker(size=10, color='green')))
-        
-        rtt, path, positions = calcPath(phasenum, source, destination, int(np.floor(time/10)*10))
-        fig.add_annotation(
-            text="Time Elapsed: "+str(time)+"s, Round Trip Time: "+str(2*np.round(rtt/300E3,3))+"ms",#, Path: "+str([str(i) for i in shortest_path[1]]),
-            showarrow=False,
-            yshift=-340, font=dict(size=18))
-        fig.add_annotation(
-            text="Path: "+str([str(i) for i in path])+', Hop count: '+str(len(path)),
-            showarrow=False,
-            yshift=-370, font=dict(size=18))
-        fig = plotPathgeo(source, destination, phasenum, path, positions, fig)
+        if False:
+            source = Locations['LDN']
+            destination = Locations['SIN']
+            fig.add_trace(go.Scattermapbox(lon=[source[0], destination[0]], lat=[source[1], destination[1]],
+                            name="frame",
+                            mode="markers",
+                            marker=go.scattermapbox.Marker(size=10, color='green')))
+            
+            rtt, path, positions = calcPath(phasenum, source, destination, int(np.floor(time/10)*10))
+            fig.add_annotation(
+                text="Time Elapsed: "+str(time)+"s, Round Trip Time: "+str(2*np.round(rtt/300E3,3))+"ms",#, Path: "+str([str(i) for i in shortest_path[1]]),
+                showarrow=False,
+                yshift=-340, font=dict(size=18))
+            fig.add_annotation(
+                text="Path: "+str([str(i) for i in path])+', Hop count: '+str(len(path)),
+                showarrow=False,
+                yshift=-370, font=dict(size=18))
+            fig = plotPathgeo(source, destination, phasenum, path, positions, fig)
         fig.update_layout(showlegend=False,  
         mapbox=dict(
             accesstoken=mapbox_access_token, 
