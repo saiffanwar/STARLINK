@@ -24,13 +24,15 @@ def graphFromPos(phasenum, times, chunk):
                 tic = tm.time()
                 G, positions = createNetworkGraph(phasenum, i)
                 graphdict[str(i)] = [G, positions]
-                print(i,': ', tm.time()-tic)
+                # print(i,' compute time: ', tm.time()-tic)
                 print(graphdict.keys())
-                print('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/'+str(i)+'.pck')
+                # print('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/'+str(i)+'.pck')
                 with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/'+str(i)+'.pck', 'wb') as f:
                     pck.dump(graphdict[str(i)], f)
     print('saved')
-        
+
+
+# In here put how many cores you would like to use for graphcomputation.
 def chunks(lst,workers=4):
     print(len(lst))
     n = int(len(lst)/workers)
@@ -49,4 +51,5 @@ def compute_graphs(time_limit, phasenum=1):
             p.start()
 
 # os.system('python3 startsim.py  --pathfinder OFF --time_limit '+str(args.time))
-compute_graphs(int(input('How many seconds would you like to compute graphs for?')))
+# compute_graphs(int(input('How many seconds would you like to compute graphs for?')))
+compute_graphs(100)

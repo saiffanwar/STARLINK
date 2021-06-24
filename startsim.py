@@ -10,12 +10,12 @@ parser = argparse.ArgumentParser(description='Simulation setup')
 
 parser.add_argument('--phasenums', default=1,
                     help='number of phases to deploy in the simulation')
-parser.add_argument('--time_limit', default=10000,
+parser.add_argument('--time_limit', default=100,
                     help='number of phases to deploy in the simulation')
-parser.add_argument('--pathfinder', default='ON',
-                    help='number of phases to deploy in the simulation')
+parser.add_argument('--pathfinder', default='OFF',
+                    help='Find the shortest paths of the routes specified')
 parser.add_argument('--getGraphs', default='OFF',
-                    help='number of phases to deploy in the simulation')
+                    help='Whether to compute network graphs')
 args = parser.parse_args()
 
 #All LEO satellites

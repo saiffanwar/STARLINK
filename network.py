@@ -8,16 +8,18 @@ from path_utils import plotPathgeo
 from sim_utils import find_sat, fetch_locs, fetch_curr, fetch_cart, calcDistanceBetween, Phases, colourdict, Locations, findrange
 import time as tm
 from copy import deepcopy
-
+import string
 
 # def createNetworkGraph(phasenum, time):
 #     longitudes, latitudes = fetch_locs(phasenum, time)
 #     positions = fetch_cart(phasenum, time)
 #     G=nx.Graph()
 #     geopositions = list(zip(longitudes, latitudes))
+#     print(len(positions))
 #     for source_sat in range(len(positions)):
 #         source_loc = positions[source_sat]
 #         for neighbour_sat in range(len(positions)):
+#             # print(source_sat, neighbour_sat)
 #             neighbour_loc = positions[neighbour_sat]
 #             distance = np.round(calcDistanceBetween(source_loc, neighbour_loc),0)
 
@@ -30,26 +32,33 @@ def createNetworkGraph(phasenum, time):
     positions = fetch_cart(phasenum, time)
     G=nx.Graph()
     geopositions = list(zip(longitudes, latitudes))
-    for source_sat in range(len(positions)):
-        satnum = divmod(source_sat, Phases['Sats per plane'][phasenum-1])
-        if satnum[1] != 0 and Phases['Sats per plane'][phasenum-1]:
-            satbefore = satnum[1] - 1
-            satafter = satnum[1] +1
-        elif satnum[1] == 0:
-            satafter = 1
-            satbefore = Phases['Sats per plane'][phasenum-1]
-        elif satnum[1] == Phases['Sats per plane'[phasenum-1]]:
-            satafter = 0
-            satbefore = Phases['Sats per plane'][phasenum-1] -1
-        neighbours = [satnum[0]*Phases['Sats per plane'][phasenum-1] + satafter, satnum[0]*Phases['Sats per plane'][phasenum-1] + satbefore]
-        print(neighbours)
-        # for neighbour_sat in range(len(positions)):
-        #     neighbour_loc = positions[neighbour_sat]
-        #     distance = np.round(calcDistanceBetween(source_loc, neighbour_loc),0)
+    m = Phases['Planes'][phasenum-1]
+    n = Phases['Sats per plane'][phasenum-1]
+    letters = string.ascii_letters
 
-            # if distance < Phases['max comms range'][phasenum-1]:
-        G.add_edge(source_sat,satnum[0]*Phases['Sats per plane'][phasenum-1] + satafter, weight=0)
-        G.add_edge(source_sat,satnum[0]*Phases['Sats per plane'][phasenum-1] + satbefore, weight=0)
+    level = letters[0:m]
+    for l in level:
+        for i in range(1, n + 1):
+            G.add_node(l+str(i))
+        
+
+    for u in G.nodes:
+        # print(u)
+        prev_level = letters[letters.index(u[0]) - 1]
+        next_level = letters[letters.index(u[0]) + 1]
+        
+        indu = int(''.join(i for i in u if i.isdigit()))
+        for v in G.nodes:
+            indv = int(''.join(i for i in v if i.isdigit()))
+            
+            if u.startswith(v[0]) and indu == indv - 1:
+                G.add_edge(u, v)
+            
+            if v[0] == next_level and indu == indv - 1:
+                G.add_edge(u, v)
+                
+            if v[0] == prev_level and indu == indv - 1:
+                G.add_edge(u, v)   
     return G, geopositions
 
 def calcPath(phasenum, source, destination, time, graphdict=None):
@@ -82,8 +91,8 @@ def onePlot(loc1, loc2, time):
                 layout=go.Layout(
                     xaxis=dict(range=[-180, 180], autorange=False, zeroline=False, title='Longitude'),
                     yaxis=dict(range=[-90, 90], autorange=False, zeroline=False, title='Latitude'),
-                    height = 500,
-                    width = 800
+                    height = 800,
+                    width = 1400
                     ))
 
     for phasenum in range(1,2):
@@ -122,13 +131,66 @@ def onePlot(loc1, loc2, time):
 
 
 
+def plotEdges(G, time=0):
+    mapbox_access_token = open(".mapbox_token").read()
+    fig = go.Figure(
+                data=[go.Scattermapbox(lon=[], lat=[],
+                    name="frame",
+                    mode="markers",
+                    marker=go.scattermapbox.Marker(size=5, color='red'))],
+                layout=go.Layout(
+                    xaxis=dict(range=[-180, 180], autorange=False, zeroline=False, title='Longitude'),
+                    yaxis=dict(range=[-90, 90], autorange=False, zeroline=False, title='Latitude'),
+                    height = 800,
+                    width = 1400
+                    ))
+    for phasenum in range(1,2):
+        longitudes, latitudes = fetch_locs(phasenum, time)
+        fig.add_trace(go.Scattermapbox(lon=longitudes, lat=latitudes,
+                        name="frame",
+                        mode="markers",
+                        text = np.arange(0,Phases['Planes'][phasenum-1]*Phases['Sats per plane'][phasenum-1],1),
+                        marker=go.scattermapbox.Marker(size=5, color=colourdict[phasenum][0])))
+
+
+    m = Phases['Planes'][phasenum-1]
+    n = Phases['Sats per plane'][phasenum-1]
+    letters = string.ascii_letters
+
+    level = letters[0:m]
+    pos = 0
+    nodes = {}
+    for l in level:
+        for i in range(1, n + 1):
+            nodes[l+str(i)] = [longitudes[pos], latitudes[pos]]
+
+        
+            pos +=1
+    # print(nodes)
+    for i in G.edges:
+        print(nodes[i[0]], nodes[i[1]])
+        fig.add_trace(go.Scattermapbox(
+        mode = "markers+lines",
+        lon = [nodes[i[0]][0], nodes[i[1]][0]],
+        lat = [nodes[i[0]][1], nodes[i[1]][1]],
+        marker=go.scattermapbox.Marker(size=5, color=colourdict[phasenum][0])))
+
+    fig.update_layout(showlegend=True,  
+        mapbox=dict(
+            accesstoken=mapbox_access_token, 
+            style='light', zoom=0.7))
+    fig.show()
+
+
 # The code below can be used to observe the Network graph at a specific timepoint. They are humanly incomprehensible.
 # [G, positions] = createNetworkGraph(1,0)
-# # [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(0)+'.pck', 'rb'))
+# [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(0)+'.pck', 'rb'))
 
 # pos = nx.circular_layout(G)
 # labels = nx.get_edge_attributes(G,'weight')
 # nx.draw_networkx_labels(G,pos,font_size=10,font_family='sans-serif')
 # nx.draw_networkx_edges(G,pos)
-# nx.draw(G)
+# nx.draw(G, with_labels = True)
+# onePlot('NYC', 'LDN',0)
+# plotEdges(G)
 # plt.show()
