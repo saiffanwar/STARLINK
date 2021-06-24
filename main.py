@@ -7,7 +7,8 @@ import click
 
 
 def phase_setup():
-    FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
+    try:
+        FeatureDict = pck.load(open('simFeatures.pck', 'rb'))
 
     Phases = FeatureDict['Phase Features']
     speed = FeatureDict['Speed'] 
@@ -62,7 +63,7 @@ def phase_setup():
     FeatureDict = {'Phase Features': Phases,
                     'Speed': speed,
                     }
-    pck.dump(FeatureDict, open('data/simFeatures.pck', 'wb'))
+    pck.dump(FeatureDict, open('simFeatures.pck', 'wb'))
 
 
 

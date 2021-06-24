@@ -5,8 +5,13 @@ from pprint import pprint
 # longitudes, latitudes = fetch_curr(1)
 positions = fetch_cart(1, 0)
 tot_distances = []
+<<<<<<< HEAD
 
 
+=======
+print(len(positions))
+print(Phases['max comms range'][1-1])
+>>>>>>> 10270f399f2c100c8eed545117032bd878b425ac
 for source_sat in range(len(positions)):
     source_loc = positions[source_sat]
     curr_distances = []

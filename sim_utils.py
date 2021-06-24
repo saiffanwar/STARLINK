@@ -9,6 +9,7 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 4: ['purple', [128, 0, 128]], 
                 5: ['hotpink', [255, 105, 180]]}
 
+<<<<<<< HEAD
 # FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
 FeatureDict = {'Phase Features': {'Planes': [5], 
                                     'Sats per plane': [10], 
@@ -16,6 +17,10 @@ FeatureDict = {'Phase Features': {'Planes': [5],
                                     'Altitude': [1150000], 
                                     'Offset': [5]}, 
                 'Speed': 10}
+=======
+FeatureDict = pck.load(open('simFeatures.pck', 'rb'))
+
+>>>>>>> 10270f399f2c100c8eed545117032bd878b425ac
 Phases = FeatureDict['Phase Features']
 speed = FeatureDict['Speed']
 earth_radius = 6.37E6

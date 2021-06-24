@@ -10,7 +10,13 @@ parser = argparse.ArgumentParser(description='Simulation setup')
 
 parser.add_argument('--phasenums', default=1,
                     help='number of phases to deploy in the simulation')
+<<<<<<< HEAD
 parser.add_argument('--time_limit', default=100,
+=======
+parser.add_argument('--time_limit', default=1,
+                    help='number of phases to deploy in the simulation')
+parser.add_argument('--pathfinder', default='ON',
+>>>>>>> 10270f399f2c100c8eed545117032bd878b425ac
                     help='number of phases to deploy in the simulation')
 parser.add_argument('--pathfinder', default='OFF',
                     help='Find the shortest paths of the routes specified')
