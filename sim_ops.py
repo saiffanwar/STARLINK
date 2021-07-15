@@ -87,8 +87,8 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
         with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'wb') as f:
             pck.dump(positions, f)
 
-        [Graph,geopos] = createNetworkGraph(phasenum, t)
-        edges = plot_3d_edges(curr_positions, Graph, phasenum)
+        Graph, nodes = createNetworkGraph(phasenum, t, curr_positions)
+        edges = plot_3d_edges(nodes, Graph, phasenum)
         # time.sleep(1)
 
         time.sleep(1/speed)

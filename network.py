@@ -19,7 +19,7 @@ import time
 # IMPORT RELEVANT TOPOLOGY HERE:
 from topology import double_graph
 
-def createNetworkGraph(phasenum, time):
+def createNetworkGraph(phasenum, time, positions):
     longitudes, latitudes = fetch_locs(phasenum, time)
     # positions = fetch_cart(phasenum, time)
     geopositions = list(zip(longitudes, latitudes))
@@ -27,11 +27,11 @@ def createNetworkGraph(phasenum, time):
     m = Phases['Planes'][phasenum-1]
     n = Phases['Sats per plane'][phasenum-1]
     
-    G = double_graph(m,n)
+    G, nodes = double_graph(m,n, positions)
 
-    return G, geopositions
+    return G, nodes
 
-def calcPath(phasenum, source, destination, time, graphdict=None):
+def calcPathold(phasenum, source, destination, time, graphdict=None):
 
     [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/'+str(time)+'.pck', 'rb'))
 
@@ -49,6 +49,7 @@ def calcPath(phasenum, source, destination, time, graphdict=None):
 
     return rtt, path, positions
 
+# def calcPath(phasenum, source, destination, time):
 
 # This function is used to create a static path image.
 def onePlot(loc1, loc2, time):
@@ -151,19 +152,10 @@ def plotEdges(G, time=0):
     fig.show()
 
 
-def plot_3d_edges(positions, G, phasenum): 
+def plot_3d_edges(nodes, G, phasenum): 
         
-    m = Phases['Planes'][phasenum-1]
-    n = Phases['Sats per plane'][phasenum-1]
-    letters = string.ascii_letters
     curves = []
-    level = letters[0:m]
-    pos = 0
-    nodes = {}
-    for l in level:
-        for i in range(1, n + 1):
-            nodes[l+str(i)] = positions[pos]
-            pos+=1
+
     for i in G.edges:
         p1 = dict(pos=vector(nodes[i[0]][0], nodes[i[0]][1], nodes[i[0]][2]), color=color.green,  radius=10000)
         p2 = dict(pos=vector(nodes[i[1]][0], nodes[i[1]][1], nodes[i[1]][2]), color=color.green, radius=10000)
