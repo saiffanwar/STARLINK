@@ -15,58 +15,20 @@ from vpython import *
 import math
 from geometry import rad, deg, cart2geo, cart2polar, polar2cart
 import time
-# def createNetworkGraph(phasenum, time):
-#     longitudes, latitudes = fetch_locs(phasenum, time)
-#     positions = fetch_cart(phasenum, time)
-#     G=nx.Graph()
-#     geopositions = list(zip(longitudes, latitudes))
-#     print(len(positions))
-#     for source_sat in range(len(positions)):
-#         source_loc = positions[source_sat]
-#         for neighbour_sat in range(len(positions)):
-#             # print(source_sat, neighbour_sat)
-#             neighbour_loc = positions[neighbour_sat]
-#             distance = np.round(calcDistanceBetween(source_loc, neighbour_loc),0)
 
-#             if distance < Phases['max comms range'][phasenum-1]:
-#                 G.add_edge(source_sat,neighbour_sat, weight=distance)
-#     return G, geopositions
+# IMPORT RELEVANT TOPOLOGY HERE:
+from topology import double_graph
 
 def createNetworkGraph(phasenum, time):
     longitudes, latitudes = fetch_locs(phasenum, time)
     # positions = fetch_cart(phasenum, time)
-    G=nx.Graph()
     geopositions = list(zip(longitudes, latitudes))
+
     m = Phases['Planes'][phasenum-1]
     n = Phases['Sats per plane'][phasenum-1]
-    letters = string.ascii_letters
-
-    level = letters[0:m]
-    for l in level:
-        for i in range(1, n + 1):
-            G.add_node(l+str(i))
-            
-    for u in G.nodes:
-        
-        prev_level = letters[letters.index(u[0]) - 1]
-        next_level = letters[letters.index(u[0]) + 1]
-        
-        indu = int(''.join(i for i in u if i.isdigit()))
     
-        for v in G.nodes:
-            indv = int(''.join(i for i in v if i.isdigit()))
-            
-            if u.startswith(v[0]) and indu == indv - 1:
-                G.add_edge(u, v)
-            
-            if v[0] == next_level and indu == indv - 1:
-                G.add_edge(u, v)
-                
-            if v[0] == prev_level and indu == indv - 1:
-                G.add_edge(u, v)    
-                
-            if indv == n and indu == 1 and (v[0] in [prev_level, u[0], next_level]):
-                G.add_edge(u, v)    
+    G = double_graph(m,n)
+
     return G, geopositions
 
 def calcPath(phasenum, source, destination, time, graphdict=None):
@@ -137,8 +99,6 @@ def onePlot(loc1, loc2, time):
     # fig.write_image('figs/exp2/'+str(loc1)+str(loc2)+'longest.pdf')
     fig.show()
 
-
-
 def plotEdges(G, time=0):
     mapbox_access_token = open(".mapbox_token").read()
     fig = go.Figure(
@@ -192,28 +152,6 @@ def plotEdges(G, time=0):
 
 
 def plot_3d_edges(positions, G, phasenum): 
-    # canvas(title='STARLINK',
-    # width=1000, height=1500,
-    # center=vector(0,0,0))
-    # lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
-
-    # ######### PHYSICAL PARAMETER SETUP #########
-    # earth_radius = 6.37E6
-    # earth = sphere(pos=vector(0,0,0), radius = earth_radius, texture = textures.earth)
-    # earth.mass = 6E24
-    # # G = 6.673E-11
-    # current_orbit = []
-    # ######## PLOT EQUATOR #####################################e
-    # equator = []
-    # for theta in np.arange(0,360,1):
-    #     x = (earth_radius+100)*math.cos(rad(theta))
-    #     y = (earth_radius+100)*math.sin(rad(theta))
-    #     equator.append(vector(x,0,y))
-    # c = curve(color=color.blue, radius=100E2)
-    # [c.append(x) for x in equator]
-
-    # for i in positions:
-    #     sphere(pos=vector(i[0], i[1], i[2]), radius = 1000E2, color=color.red)
         
     m = Phases['Planes'][phasenum-1]
     n = Phases['Sats per plane'][phasenum-1]
@@ -231,8 +169,8 @@ def plot_3d_edges(positions, G, phasenum):
         p2 = dict(pos=vector(nodes[i[1]][0], nodes[i[1]][1], nodes[i[1]][2]), color=color.green, radius=10000)
         distance = np.round(calcDistanceBetween([nodes[i[0]][0], nodes[i[0]][1], nodes[i[0]][2]], [nodes[i[1]][0], nodes[i[1]][1], nodes[i[1]][2]]),0)
         # print(distance, Phases['max comms range'][1-1])
-        # if distance < Phases['max comms range'][1-1]:
-        curves.append(curve(p1,p2))
+        if distance < Phases['max comms range'][1-1]:
+            curves.append(curve(p1,p2))
     
     # time.sleep(1)
     return curves
