@@ -10,12 +10,12 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 5: ['hotpink', [255, 105, 180]]}
 
 # FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
-FeatureDict = {'Phase Features': {'Planes': [5], 
-                                    'Sats per plane': [10], 
+FeatureDict = {'Phase Features': {'Planes': [10], 
+                                    'Sats per plane': [20], 
                                     'Inclination': [70], 
                                     'Altitude': [1150000], 
                                     'Offset': [5]}, 
-                'Speed': 10}
+                'Speed': 1}
 Phases = FeatureDict['Phase Features']
 speed = FeatureDict['Speed']
 earth_radius = 6.37E6
@@ -27,7 +27,7 @@ earth_radius = 6.37E6
 #             'Offset': [5, 5]}
 
 # calculates features for the phase depending on the altitude.
-Phases['max comms range'] = [(np.sqrt((((earth_radius+10E3)+Phases['Altitude'][i])**2) - ((earth_radius+10E3)**2))) for i in range(len(Phases['Altitude']))]
+Phases['max comms range'] = [(np.sqrt((((earth_radius+10E3)+Phases['Altitude'][i])**2) - ((earth_radius+10E3)**2)))*2 for i in range(len(Phases['Altitude']))]
 Phases['max ground reach'] = [Phases['Altitude'][i]*math.tan(rad(50)) for i in range(len(Phases['Altitude']))]
 
 # Some popular locations defined by geographical coordinates
@@ -58,12 +58,12 @@ for phasenum in range(1,2):
 
 
 def fetch_locs(phasenum,t):
-
+    phasenumPos = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/curr_positions.pck', 'rb'))
     longitudes = []
     latitudes = []
-    positions = phasenumPos[str(phasenum)]
+    positions = phasenumPos[1]
 
-    for i in positions[str(t)]:
+    for i in positions:
         lon, lat = cart2geo(i[0], i[1], i[2],t)
         longitudes.append(lon)
         latitudes.append(lat)
@@ -72,12 +72,12 @@ def fetch_locs(phasenum,t):
 def fetch_curr(phasenum):
     longitudes = []
     latitudes = []
-    plane_positions = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/plane_positions.pck', 'rb'))
-    for i in plane_positions[1]:
-        lon, lat = cart2geo(i[0], i[1], i[2], plane_positions[0])
+    curr_positions = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/curr_positions.pck', 'rb'))
+    for i in curr_positions[1]:
+        lon, lat = cart2geo(i[0], i[1], i[2], curr_positions[0])
         longitudes.append(lon)
         latitudes.append(lat)
-    return longitudes, latitudes, plane_positions[0]
+    return longitudes, latitudes, curr_positions[0]
 
 def fetch_cart(phasenum, time):
     positions = phasenumPos[str(phasenum)]

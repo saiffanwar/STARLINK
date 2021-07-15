@@ -8,6 +8,7 @@ import threading
 from geometry import rad, deg, cart2geo, cart2polar, polar2cart
 from sim_utils import rotate_orbit, Phases, colourdict, speed
 import pickle as pck
+from network import createNetworkGraph, plot_3d_edges
 # from graphcomp import compute_graphs
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
@@ -59,37 +60,46 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
 
     positions = {}
     orbit = []
-    plane_positions = []
+    curr_positions = []
     for i, object in zip(np.arange(0,len(plane)), plane):
         new_pos(object, dt)
         pos = object.pos
-        plane_positions.append([pos.x, pos.y, pos.z])
+        curr_positions.append([pos.x, pos.y, pos.z])
         orbit.append([t,[pos.x, pos.y, pos.z]])
-    positions[str(t)] = plane_positions
-    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/plane_positions.pck', 'wb') as f:
-        pck.dump([t,plane_positions], f)
+    positions[str(t)] = curr_positions
+    t=t+dt
+    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/curr_positions.pck', 'wb') as f:
+        pck.dump([t,curr_positions], f)
     while True:
         earth.rotate(rad(1/240), axis=vec(0,1,0))
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
         rate(100*len(sats)*run_rate)
-        plane_positions = []
+        curr_positions = []
         for i, object in zip(np.arange(0,len(plane)), plane):
             new_pos(object, dt)
             pos = object.pos
-            plane_positions.append([pos.x, pos.y, pos.z])
+            curr_positions.append([pos.x, pos.y, pos.z])
             orbit.append([t,[pos.x, pos.y, pos.z]])
-        time.sleep(1 /speed)
+
+        positions[str(t)] = curr_positions
+        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/curr_positions.pck', 'wb') as f:
+            pck.dump([t,curr_positions], f)
+        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'wb') as f:
+            pck.dump(positions, f)
+
+        [Graph,geopos] = createNetworkGraph(phasenum, t)
+        edges = plot_3d_edges(curr_positions, Graph, phasenum)
+        # time.sleep(1)
+
+        time.sleep(1/speed)
         t=t+dt
         if t%1000==0:
             print(t)    
         if t > time_limit:
             break
-        positions[str(t)] = plane_positions
-        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/plane_positions.pck', 'wb') as f:
-            pck.dump([t,plane_positions], f)
-    print(t)
-    with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'wb') as f:
-        pck.dump(positions, f)
+        [c.clear() for c in edges]
+
+
     with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/orbit.pck', 'wb') as f:
         pck.dump(orbit, f)
     print('files saved')
@@ -144,8 +154,8 @@ def initial_plane(object, no_of_sats, period, plane_number, total_planes, phasen
         sat = plot_satellite(j[0], j[1], colourdict[phasenum][1])
 
         plane_sats.append(sat)
-    c = curve(color=color.green, radius=100E2)
-    [c.append(x) for x in orbit]
+    # c = curve(color=color.green, radius=100E2)
+    # [c.append(x) for x in orbit]
     return plane_sats, longitudes, latitudes, starting_positions
 
 def phase(phasenum, phase_offset=Phases['Offset'][0]):
@@ -183,7 +193,7 @@ def phase(phasenum, phase_offset=Phases['Offset'][0]):
         for j in plane_sats:
             sats.append(j)
     t=0
-    with open('data/plane_positions'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'.pck', 'wb') as f:
+    with open('data/curr_positions'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'.pck', 'wb') as f:
             pck.dump([t,all_initial_pos], f)
     return sats
 

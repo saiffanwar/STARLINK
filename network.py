@@ -9,7 +9,12 @@ from sim_utils import find_sat, fetch_locs, fetch_curr, fetch_cart, calcDistance
 import time as tm
 from copy import deepcopy
 import string
-
+from tkinter import *
+from turtle import *
+from vpython import *
+import math
+from geometry import rad, deg, cart2geo, cart2polar, polar2cart
+import time
 # def createNetworkGraph(phasenum, time):
 #     longitudes, latitudes = fetch_locs(phasenum, time)
 #     positions = fetch_cart(phasenum, time)
@@ -29,7 +34,7 @@ import string
 
 def createNetworkGraph(phasenum, time):
     longitudes, latitudes = fetch_locs(phasenum, time)
-    positions = fetch_cart(phasenum, time)
+    # positions = fetch_cart(phasenum, time)
     G=nx.Graph()
     geopositions = list(zip(longitudes, latitudes))
     m = Phases['Planes'][phasenum-1]
@@ -40,14 +45,14 @@ def createNetworkGraph(phasenum, time):
     for l in level:
         for i in range(1, n + 1):
             G.add_node(l+str(i))
-        
-
+            
     for u in G.nodes:
-        # print(u)
+        
         prev_level = letters[letters.index(u[0]) - 1]
         next_level = letters[letters.index(u[0]) + 1]
         
         indu = int(''.join(i for i in u if i.isdigit()))
+    
         for v in G.nodes:
             indv = int(''.join(i for i in v if i.isdigit()))
             
@@ -58,7 +63,10 @@ def createNetworkGraph(phasenum, time):
                 G.add_edge(u, v)
                 
             if v[0] == prev_level and indu == indv - 1:
-                G.add_edge(u, v)   
+                G.add_edge(u, v)    
+                
+            if indv == n and indu == 1 and (v[0] in [prev_level, u[0], next_level]):
+                G.add_edge(u, v)    
     return G, geopositions
 
 def calcPath(phasenum, source, destination, time, graphdict=None):
@@ -134,10 +142,10 @@ def onePlot(loc1, loc2, time):
 def plotEdges(G, time=0):
     mapbox_access_token = open(".mapbox_token").read()
     fig = go.Figure(
-                data=[go.Scattermapbox(lon=[], lat=[],
+                data=[go.Scattergeo(lon=[], lat=[],
                     name="frame",
                     mode="markers",
-                    marker=go.scattermapbox.Marker(size=5, color='red'))],
+                    marker=dict(size=5, color='red'))],
                 layout=go.Layout(
                     xaxis=dict(range=[-180, 180], autorange=False, zeroline=False, title='Longitude'),
                     yaxis=dict(range=[-90, 90], autorange=False, zeroline=False, title='Latitude'),
@@ -146,11 +154,11 @@ def plotEdges(G, time=0):
                     ))
     for phasenum in range(1,2):
         longitudes, latitudes = fetch_locs(phasenum, time)
-        fig.add_trace(go.Scattermapbox(lon=longitudes, lat=latitudes,
+        fig.add_trace(go.Scattergeo(lon=longitudes, lat=latitudes,
                         name="frame",
                         mode="markers",
                         text = np.arange(0,Phases['Planes'][phasenum-1]*Phases['Sats per plane'][phasenum-1],1),
-                        marker=go.scattermapbox.Marker(size=5, color=colourdict[phasenum][0])))
+                        marker=dict(size=5, color=colourdict[phasenum][0])))
 
 
     m = Phases['Planes'][phasenum-1]
@@ -167,30 +175,83 @@ def plotEdges(G, time=0):
         
             pos +=1
     # print(nodes)
+    print(nodes)
     for i in G.edges:
-        print(nodes[i[0]], nodes[i[1]])
-        fig.add_trace(go.Scattermapbox(
+        # print(nodes[i[0]], nodes[i[1]])
+        fig.add_trace(go.Scattergeo(
         mode = "markers+lines",
         lon = [nodes[i[0]][0], nodes[i[1]][0]],
         lat = [nodes[i[0]][1], nodes[i[1]][1]],
-        marker=go.scattermapbox.Marker(size=5, color=colourdict[phasenum][0])))
+        marker=dict(size=5, color=colourdict[phasenum][0])))
 
-    fig.update_layout(showlegend=True,  
-        mapbox=dict(
-            accesstoken=mapbox_access_token, 
-            style='light', zoom=0.7))
+    # fig.update_layout(showlegend=True,  
+    #     mapbox=dict(
+    #         accesstoken=mapbox_access_token, 
+    #         style='light', zoom=0.7))
     fig.show()
+
+
+def plot_3d_edges(positions, G, phasenum): 
+    # canvas(title='STARLINK',
+    # width=1000, height=1500,
+    # center=vector(0,0,0))
+    # lamp = local_light(pos=vector(-1E10,1E10,-1E10),color=color.white)
+
+    # ######### PHYSICAL PARAMETER SETUP #########
+    # earth_radius = 6.37E6
+    # earth = sphere(pos=vector(0,0,0), radius = earth_radius, texture = textures.earth)
+    # earth.mass = 6E24
+    # # G = 6.673E-11
+    # current_orbit = []
+    # ######## PLOT EQUATOR #####################################e
+    # equator = []
+    # for theta in np.arange(0,360,1):
+    #     x = (earth_radius+100)*math.cos(rad(theta))
+    #     y = (earth_radius+100)*math.sin(rad(theta))
+    #     equator.append(vector(x,0,y))
+    # c = curve(color=color.blue, radius=100E2)
+    # [c.append(x) for x in equator]
+
+    # for i in positions:
+    #     sphere(pos=vector(i[0], i[1], i[2]), radius = 1000E2, color=color.red)
+        
+    m = Phases['Planes'][phasenum-1]
+    n = Phases['Sats per plane'][phasenum-1]
+    letters = string.ascii_letters
+    curves = []
+    level = letters[0:m]
+    pos = 0
+    nodes = {}
+    for l in level:
+        for i in range(1, n + 1):
+            nodes[l+str(i)] = positions[pos]
+            pos+=1
+    for i in G.edges:
+        p1 = dict(pos=vector(nodes[i[0]][0], nodes[i[0]][1], nodes[i[0]][2]), color=color.green,  radius=10000)
+        p2 = dict(pos=vector(nodes[i[1]][0], nodes[i[1]][1], nodes[i[1]][2]), color=color.green, radius=10000)
+        distance = np.round(calcDistanceBetween([nodes[i[0]][0], nodes[i[0]][1], nodes[i[0]][2]], [nodes[i[1]][0], nodes[i[1]][1], nodes[i[1]][2]]),0)
+        # print(distance, Phases['max comms range'][1-1])
+        # if distance < Phases['max comms range'][1-1]:
+        curves.append(curve(p1,p2))
+    
+    # time.sleep(1)
+    return curves
+    
 
 
 # The code below can be used to observe the Network graph at a specific timepoint. They are humanly incomprehensible.
 # [G, positions] = createNetworkGraph(1,0)
-# [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(0)+'.pck', 'rb'))
+# cart_pos = fetch_cart(1, 0)
+
+# plot_3d_edges(cart_pos, G, 1)
+
+# [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(10)+'.pck', 'rb'))
 
 # pos = nx.circular_layout(G)
 # labels = nx.get_edge_attributes(G,'weight')
 # nx.draw_networkx_labels(G,pos,font_size=10,font_family='sans-serif')
 # nx.draw_networkx_edges(G,pos)
 # nx.draw(G, with_labels = True)
-# onePlot('NYC', 'LDN',0)
+# onePlot('NYC', 'LDN',10)
 # plotEdges(G)
 # plt.show()
