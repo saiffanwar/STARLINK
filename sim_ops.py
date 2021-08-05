@@ -1,14 +1,16 @@
 import math
 from tkinter import *
 from turtle import *
+
+from numpy.lib.utils import source
 from vpython import *
 import numpy as np
 import time
 import threading
 from geometry import rad, deg, cart2geo, cart2polar, polar2cart
-from sim_utils import rotate_orbit, Phases, colourdict, speed
+from sim_utils import Phases, colourdict, speed, calcGCR
 import pickle as pck
-from network import createNetworkGraph, plot_3d_edges
+from network import createNetworkGraph, plot_3d_edges, calcPath, plotShortestPath
 # from graphcomp import compute_graphs
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
@@ -61,6 +63,8 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
     positions = {}
     orbit = []
     curr_positions = []
+    pathLengths = []
+    oldedges = []
     for i, object in zip(np.arange(0,len(plane)), plane):
         new_pos(object, dt)
         pos = object.pos
@@ -70,6 +74,8 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
     t=t+dt
     with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/curr_positions.pck', 'wb') as f:
         pck.dump([t,curr_positions], f)
+
+
     while True:
         earth.rotate(rad(1/240), axis=vec(0,1,0))
         # Computes the graph of the current static network and stores it in a dict with the timestamp.
@@ -88,7 +94,21 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
             pck.dump(positions, f)
 
         Graph, nodes = createNetworkGraph(phasenum, t, curr_positions)
-        edges = plot_3d_edges(nodes, Graph, phasenum)
+        # edges = plot_3d_edges(nodes, Graph, phasenum)
+
+        shortest_path, distance, Graph = calcPath(phasenum, t, Graph, curr_positions, nodes)
+        oldedges = plotShortestPath(shortest_path, nodes, oldedges)
+
+
+        sourceCartPos = nodes[shortest_path[0]]
+        sourceGeoPos = cart2geo(sourceCartPos[0], sourceCartPos[1], sourceCartPos[2])
+        destCartPos = nodes[shortest_path[-1]]
+        destGeoPos = cart2geo(destCartPos[0], destCartPos[1], destCartPos[2])
+        gcr = calcGCR(sourceGeoPos, destGeoPos)
+
+        pathLengths.append([t,[distance, gcr]])
+        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/pathLengths.pck', 'wb') as f:
+            pck.dump(pathLengths, f)
         # time.sleep(1)
 
         time.sleep(1/speed)
@@ -97,8 +117,6 @@ def orbit(sats, phasenum, time_limit=1000000000, getGraphs=False, run_rate=1):
             print(t)    
         if t > time_limit:
             break
-        [c.clear() for c in edges]
-
 
     with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/orbit.pck', 'wb') as f:
         pck.dump(orbit, f)

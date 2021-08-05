@@ -10,12 +10,12 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 5: ['hotpink', [255, 105, 180]]}
 
 # FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
-FeatureDict = {'Phase Features': {'Planes': [5], 
-                                    'Sats per plane': [10], 
+FeatureDict = {'Phase Features': {'Planes': [10], 
+                                    'Sats per plane': [20], 
                                     'Inclination': [70], 
                                     'Altitude': [1150000], 
                                     'Offset': [5]}, 
-                'Speed': 10}
+                'Speed': 1}
 Phases = FeatureDict['Phase Features']
 speed = FeatureDict['Speed']
 earth_radius = 6.37E6
@@ -28,7 +28,7 @@ earth_radius = 6.37E6
 
 # calculates features for the phase depending on the altitude.
 Phases['max comms range'] = [(np.sqrt((((earth_radius+10E3)+Phases['Altitude'][i])**2) - ((earth_radius+10E3)**2)))*2 for i in range(len(Phases['Altitude']))]
-Phases['max ground reach'] = [Phases['Altitude'][i]*math.tan(rad(50)) for i in range(len(Phases['Altitude']))]
+Phases['max ground reach'] = [Phases['Altitude'][i]*math.tan(rad(50))*2 for i in range(len(Phases['Altitude']))]
 
 # Some popular locations defined by geographical coordinates
 Locations = {'LDN': [-0.13, 51.5],
@@ -82,22 +82,6 @@ def fetch_curr(phasenum):
 def fetch_cart(phasenum, time):
     positions = phasenumPos[str(phasenum)]
     return positions[str(time)]
-
-# This function takes the current position of a satellite and adjusts it to match the earths rotation.
-def rotate_orbit(theta, x):
-    old_theta = theta
-    if x>=0:
-        if theta >= 0:
-            theta = deg(theta)
-        else:
-            theta = 180 + deg(theta)
-    if x<0:
-        if theta >= 0:
-            theta = 180 + deg(theta)
-        else:
-            theta = 360 + deg(theta)
-
-    return rad(theta+1/240)
 
 def fetch_orbit():
     orbit = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/orbit.pck', 'rb'))

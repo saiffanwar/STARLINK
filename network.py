@@ -17,7 +17,7 @@ from geometry import rad, deg, cart2geo, cart2polar, polar2cart
 import time
 
 # IMPORT RELEVANT TOPOLOGY HERE:
-from topology import double_graph
+from topology import double_graph as tp
 
 def createNetworkGraph(phasenum, time, positions):
     longitudes, latitudes = fetch_locs(phasenum, time)
@@ -27,7 +27,7 @@ def createNetworkGraph(phasenum, time, positions):
     m = Phases['Planes'][phasenum-1]
     n = Phases['Sats per plane'][phasenum-1]
     
-    G, nodes = double_graph(m,n, positions)
+    G, nodes = tp(phasenum, m,n, positions)
 
     return G, nodes
 
@@ -49,7 +49,36 @@ def calcPathold(phasenum, source, destination, time, graphdict=None):
 
     return rtt, path, positions
 
-# def calcPath(phasenum, source, destination, time):
+def calcPath(phasenum, time, G, positions, nodes, mode='length'):
+
+# uncomment for location based routes
+    # geoPos = [cart2geo(x[0], x[1], x[2]) for x in positions]
+    # source = Locations['LDN']
+    # destination = Locations['SIN']
+
+    # source_sat, source2ground = find_sat(phasenum, source, geoPos)
+    # dest_sat, dest2ground = find_sat(phasenum, destination, geoPos)        
+
+    # source = list(nodes.keys())[source_sat]
+    # destination = list(nodes.keys())[dest_sat]
+
+    source = 'a1'
+    destination = 'f8'
+    # max_distance = Phases['max comms range'][phasenum-1]
+    max_distance=None
+    if mode == 'length':
+        S = dict(nx.all_pairs_dijkstra_path(G, max_distance, 'weight')) # return all shortest paths
+        D = dict(nx.all_pairs_dijkstra_path_length(G, max_distance, 'weight')) # return all shortest paths length (km)
+    elif mode == 'hops':
+        S = dict(nx.all_pairs_dijkstra_path(G, max_distance, None))
+        D = dict(nx.all_pairs_dijkstra_path_length(G, max_distance, None)) # return all shortest paths length (hops)
+
+
+    shortest_path = S[source][destination] # shortest path between a1 and j1
+    distance = D[source][destination] # distance between a1 and j1 (km)
+
+    #--- Shortest paths by number of hops
+    return shortest_path, distance, G
 
 # This function is used to create a static path image.
 def onePlot(loc1, loc2, time):
@@ -155,7 +184,6 @@ def plotEdges(G, time=0):
 def plot_3d_edges(nodes, G, phasenum): 
         
     curves = []
-
     for i in G.edges:
         p1 = dict(pos=vector(nodes[i[0]][0], nodes[i[0]][1], nodes[i[0]][2]), color=color.green,  radius=10000)
         p2 = dict(pos=vector(nodes[i[1]][0], nodes[i[1]][1], nodes[i[1]][2]), color=color.green, radius=10000)
@@ -164,9 +192,21 @@ def plot_3d_edges(nodes, G, phasenum):
         if distance < Phases['max comms range'][1-1]:
             curves.append(curve(p1,p2))
     
-    # time.sleep(1)
     return curves
-    
+
+
+def plotShortestPath(shortest_path, nodes, oldedges):
+    edges = []
+    [c.clear() for c in oldedges]
+
+    for i in range(len(shortest_path)-1):
+        sourcePos = nodes[shortest_path[i]]
+        destPos = nodes[shortest_path[i+1]]
+
+        edges.append(curve(sourcePos,destPos))
+
+    return edges
+
 
 
 # The code below can be used to observe the Network graph at a specific timepoint. They are humanly incomprehensible.
