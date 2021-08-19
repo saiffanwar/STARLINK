@@ -8,7 +8,6 @@ from matplotlib.dates import date2num
 import pickle as pck
 from sim_utils import Phases, Locations, calcGCR
 from tqdm import tqdm
-import seaborn as sns
 import datetime
 
 

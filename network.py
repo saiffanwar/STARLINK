@@ -52,18 +52,18 @@ def calcPathold(phasenum, source, destination, time, graphdict=None):
 def calcPath(phasenum, time, G, positions, nodes, mode='length'):
 
 # uncomment for location based routes
-    # geoPos = [cart2geo(x[0], x[1], x[2]) for x in positions]
-    # source = Locations['LDN']
-    # destination = Locations['SIN']
+    geoPos = [cart2geo(x[0], x[1], x[2]) for x in positions]
+    source = Locations['LDN']
+    destination = Locations['SIN']
 
-    # source_sat, source2ground = find_sat(phasenum, source, geoPos)
-    # dest_sat, dest2ground = find_sat(phasenum, destination, geoPos)        
+    source_sat, source2ground = find_sat(phasenum, source, geoPos)
+    dest_sat, dest2ground = find_sat(phasenum, destination, geoPos)        
 
-    # source = list(nodes.keys())[source_sat]
-    # destination = list(nodes.keys())[dest_sat]
+    source = list(nodes.keys())[source_sat]
+    destination = list(nodes.keys())[dest_sat]
 
-    source = 'a1'
-    destination = 'f8'
+    # source = 'a1'
+    # destination = 'f8'
     # max_distance = Phases['max comms range'][phasenum-1]
     max_distance=None
     if mode == 'length':

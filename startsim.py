@@ -26,7 +26,7 @@ for phasenum in range(1,int(args.phasenums)+1):
 
 for i in phase_sats:
     if args.getGraphs == 'ON':
-        threading.Thread(target=orbit, args=(i, 1, int(args.time_limit), True)).start()
+        threading.Thread(target=orbit, args=(i, 1, int(args.time_limit))).start()
  
     else:
         threading.Thread(target=orbit, args=(i, 1, int(args.time_limit))).start()
