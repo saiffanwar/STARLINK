@@ -10,7 +10,7 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 5: ['hotpink', [255, 105, 180]]}
 
 # FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
-FeatureDict = {'Phase Features': {'Planes': [10], 
+FeatureDict = {'Phase Features': {'Planes': [20], 
                                     'Sats per plane': [10], 
                                     'Inclination': [70], 
                                     'Altitude': [1150000], 
@@ -47,14 +47,6 @@ for phasenum in range(1,2):
         Path('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))).mkdir(parents=True, exist_ok=True)
         pck.dump([], open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'wb'))
         phasenumPos[str(phasenum)] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'rb'))
-
-    try:
-        with open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/0.pck', 'rb') as file:
-            pck.load(file)
-        file.close()
-    except:
-        print('GRAPH WARNING: The graphs for this configuration have not been computed therefore the network paths will not work.')
-        # pass
 
 
 def fetch_locs(phasenum,t):

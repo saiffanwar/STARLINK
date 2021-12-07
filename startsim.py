@@ -1,7 +1,6 @@
 from sim_ops import phase, orbit
 import os
 import threading
-import click
 import pickle as pck 
 from pprint import pprint
 import argparse
@@ -12,7 +11,7 @@ parser.add_argument('--phasenums', default=1,
                     help='number of phases to deploy in the simulation')
 parser.add_argument('--time_limit', default=10000000,
                     help='number of phases to deploy in the simulation')
-parser.add_argument('--pathfinder', default='OFF',
+parser.add_argument('--pathfinder', default='ON',
                     help='Find the shortest paths of the routes specified')
 parser.add_argument('--getGraphs', default='OFF',
                     help='Whether to compute network graphs')

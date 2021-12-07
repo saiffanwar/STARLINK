@@ -17,37 +17,16 @@ from geometry import rad, deg, cart2geo, cart2polar, polar2cart
 import time
 
 # IMPORT RELEVANT TOPOLOGY HERE:
-from topology import double_graph as tp
+from topology import manhattan as tp
 
-def createNetworkGraph(phasenum, time, positions):
-    longitudes, latitudes = fetch_locs(phasenum, time)
-    # positions = fetch_cart(phasenum, time)
-    geopositions = list(zip(longitudes, latitudes))
-
-    m = Phases['Planes'][phasenum-1]
-    n = Phases['Sats per plane'][phasenum-1]
+def createNetworkGraph(phase, time):
+    geopos = [[x.longitude, x.latitude] for x in phase.PhaseSats]
+    cartpos = [[sat.pos.x, sat.pos.y, sat.pos.z] for sat in phase.PhaseSats]
     
-    G, nodes = tp(phasenum, m,n, positions)
+    G, nodes = tp(phase)
 
     return G, nodes
 
-def calcPathold(phasenum, source, destination, time, graphdict=None):
-
-    [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/'+str(time)+'.pck', 'rb'))
-
-    tic = tm.time()
-    source_sat, source2ground = find_sat(phasenum, source, positions)
-    source_calc_time1 = tm.time() - tic
-    tic = tm.time()
-    dest_sat, dest2ground = find_sat(phasenum, destination, positions)        
-    dest_calc_time1 = tm.time() - tic
-
-
-    shortest_path = list(nx.single_source_dijkstra(G, source_sat, dest_sat,weight='weight'))
-    path = shortest_path[1]
-    rtt = shortest_path[0] + source2ground + dest2ground
-
-    return rtt, path, positions
 
 def calcPath(phasenum, time, G, positions, nodes, mode='length'):
 
@@ -181,7 +160,7 @@ def plotEdges(G, time=0):
     fig.show()
 
 
-def plot_3d_edges(nodes, G, phasenum): 
+def plot_3d_edges(nodes, G): 
         
     curves = []
     for i in G.edges:
@@ -206,22 +185,3 @@ def plotShortestPath(shortest_path, nodes, oldedges):
         edges.append(curve(sourcePos,destPos))
 
     return edges
-
-
-
-# The code below can be used to observe the Network graph at a specific timepoint. They are humanly incomprehensible.
-# [G, positions] = createNetworkGraph(1,0)
-# cart_pos = fetch_cart(1, 0)
-
-# plot_3d_edges(cart_pos, G, 1)
-
-# [G, positions] = pck.load(open('data/'+str(int(Phases['Altitude'][1-1]/1E3))+'/'+str(10)+'.pck', 'rb'))
-
-# pos = nx.circular_layout(G)
-# labels = nx.get_edge_attributes(G,'weight')
-# nx.draw_networkx_labels(G,pos,font_size=10,font_family='sans-serif')
-# nx.draw_networkx_edges(G,pos)
-# nx.draw(G, with_labels = True)
-# onePlot('NYC', 'LDN',10)
-# plotEdges(G)
-# plt.show()
