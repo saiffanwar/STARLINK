@@ -20,8 +20,7 @@ args = parser.parse_args()
 
 
 ############## SCENE SETUP ##################
-scene = vp.canvas(title='STARLINK',
-    width=1000, height=1500,
+scene = vp.canvas(width=700, height=700,
     center=vp.vector(0,0,0))
 lamp = vp.local_light(pos=vp.vector(-1E10,1E10,-1E10),color=vp.color.white)
 

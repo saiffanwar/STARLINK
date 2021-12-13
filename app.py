@@ -46,7 +46,7 @@ def update_graph_live(n):
                     xaxis=dict(range=[-180, 180], autorange=False, zeroline=False, title='Longitude'),
                     yaxis=dict(range=[-90, 90], autorange=False, zeroline=False, title='Latitude'),
                     height = 800,
-                    width = 1600,
+                    # width = 800,
                     title ={
                     'text': "Calculating the shortest path between two locations through Starlink Phase 1",
                     'y':0.95,
