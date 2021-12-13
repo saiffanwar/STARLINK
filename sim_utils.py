@@ -10,21 +10,15 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 5: ['hotpink', [255, 105, 180]]}
 
 # FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
-FeatureDict = {'Phase Features': {'Planes': [20], 
-                                    'Sats per plane': [10], 
+FeatureDict = {'Phase Features': {'Planes': [1], 
+                                    'Sats per plane': [1], 
                                     'Inclination': [70], 
                                     'Altitude': [1150000], 
-                                    'Offset': [5]}, 
-                'Speed': 100}
+                                    'Offset': [0]}, 
+                'Speed': 1000}
 Phases = FeatureDict['Phase Features']
 speed = FeatureDict['Speed']
 earth_radius = 6.37E6
-
-# Phases = {'Planes': [32, 6],
-#             'Sats per plane': [50, 20],
-#             'Inclination': [53,76],
-#             'Altitude': [1150E3, 570E3],
-#             'Offset': [5, 5]}
 
 # calculates features for the phase depending on the altitude.
 Phases['max comms range'] = [(np.sqrt((((earth_radius+10E3)+Phases['Altitude'][i])**2) - ((earth_radius+10E3)**2)))*2 for i in range(len(Phases['Altitude']))]
@@ -49,18 +43,6 @@ for phasenum in range(1,2):
         phasenumPos[str(phasenum)] = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/positions.pck', 'rb'))
 
 
-def fetch_locs(phasenum,t):
-    phasenumPos = pck.load(open('data/'+str(int(Phases['Altitude'][phasenum-1]/1E3))+'/curr_positions.pck', 'rb'))
-    longitudes = []
-    latitudes = []
-    positions = phasenumPos[1]
-
-    for i in positions:
-        lon, lat = cart2geo(i[0], i[1], i[2],t)
-        longitudes.append(lon)
-        latitudes.append(lat)
-    return longitudes, latitudes
-
 def fetch_curr(phasenum):
     longitudes = []
     latitudes = []
@@ -72,7 +54,7 @@ def fetch_curr(phasenum):
     return longitudes, latitudes, curr_positions[0]
 
 def fetch_cart(phasenum, time):
-    positions = phasenumPos[str(phasenum)]
+    _, _, positions = fetch_curr(phasenum)
     return positions[str(time)]
 
 def fetch_orbit():

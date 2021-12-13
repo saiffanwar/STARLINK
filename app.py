@@ -5,7 +5,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
-from sim_utils import fetch_curr, fetch_locs, colourdict, Locations, Phases
+from sim_utils import fetch_curr, colourdict, Locations, Phases
 import webbrowser
 from path_utils import plotPathgeo
 import numpy as np 
@@ -45,7 +45,7 @@ def update_graph_live(n):
                 layout=go.Layout(
                     xaxis=dict(range=[-180, 180], autorange=False, zeroline=False, title='Longitude'),
                     yaxis=dict(range=[-90, 90], autorange=False, zeroline=False, title='Latitude'),
-                    height = 800,
+                    height = 1000,
                     # width = 800,
                     title ={
                     'text': "Calculating the shortest path between two locations through Starlink Phase 1",

@@ -1,7 +1,7 @@
 import math
 from tkinter import *
 from turtle import *
-
+from pprint import pprint
 from sim_utils import colourdict, speed, calcGCR
 
 from numpy.lib.utils import source
@@ -26,7 +26,7 @@ def plot_satellite(coords, scene, velocity=0, rgb=[255, 0, 0]):
     satellite.velocity = velocity
     satellite.acceleration = vector(0,0,0)
     satellite.orbit = curve(canvas=scene, color=color.green, radius=10E3)    
-    satellite.geopos = [23, 34]
+    satellite.geopos = [x for x in cart2geo(coords[0], coords[1], coords[2])]
 
     return satellite
 
@@ -67,7 +67,6 @@ class Phase():
         intervals = np.around(np.linspace(0+(offset*plane_number),period+(offset*plane_number),self.sats_per_plane+1), precision)[:-1]
         positions = []
 
-        starting_positions = []
         orbit = []
         while t<period+offset*self.no_of_planes:
             t = np.round(t, 2)
@@ -79,26 +78,22 @@ class Phase():
             orbit.append(pos)
             if t in intervals:
                 positions.append([coords, velocity])
-                starting_positions.append(coords)
             t=t+dt
-        for j in positions:
+        for satnum, j in list(enumerate(positions)):
             pos = j[0]
             sat = plot_satellite(j[0], self.scene, j[1], colourdict[self.phasenum][1])
-            sat.longitude, sat.latitude = cart2geo(coords[0], coords[1], coords[2])
-
+            curve(vec(0,0,0), j[0])
+            sat.geopos = [x for x in cart2geo(coords[0], coords[1], coords[2])]
             plane_sats.append(sat)
+            sat.id = [plane_number, satnum]
         c = curve(color=color.green, radius=100E2)
         [c.append(x) for x in orbit]
-        return plane_sats, starting_positions
+        return plane_sats
 
 
     def phase(self):
 
-        thetas = np.linspace(0,360,self.no_of_planes+1)
-        thetas = thetas[:-1]
-        # if self.phasenum ==2:
-        #     thetas = np.linspace((360/self.no_of_planes)/2,360+ (360/self.no_of_planes)/2,self.no_of_planes+1) 
-        all_initial_pos = []
+        thetas = np.linspace(0,360,self.no_of_planes+1)[:-1]
         period = (np.sqrt((4*(math.pi**2)*((self.altitude+self.earth.radius)**3))/(G*self.earth.mass)))
         satellite_separation = period/self.sats_per_plane
 
@@ -112,29 +107,26 @@ class Phase():
                 velocity = speed*norm(hat(vector(1,0,(-x/z))))
             initial_sat = plot_satellite(coords, self.scene, velocity)
             initial_sat.visible = False
-            plane_sats, starting_positions = self.plane(initial_sat, period, i)
+            plane_sats = self.plane(initial_sat, period, i)
             self.PhaseSats = np.array(np.append(self.PhaseSats, plane_sats)).flatten()
-            [all_initial_pos.append(i) for i in starting_positions]
-            
+            all_initial_pos = [[s.pos.x, s.pos.y, s.pos.z] for s in self.PhaseSats]
         t=0
-        with open('data/'+str(int(self.altitude/1E3))+'/curr_positions'+str(int(self.altitude/1E3))+'.pck', 'wb') as f:
-                pck.dump([t,all_initial_pos], f)
+        with open('data/'+str(int(self.altitude/1E3))+'/curr_positions.pck', 'wb') as f:
+            pck.dump([t,all_initial_pos], f)
 
     def new_pos(self, sat, dt):
         force_gravity = -G*self.earth.mass*sat.mass/(mag(sat.pos-self.earth.pos)**2)*norm(sat.pos-self.earth.pos)
         sat.acceleration = force_gravity/sat.mass
         sat.velocity=sat.velocity+sat.acceleration*dt
         pos =sat.pos+sat.velocity*dt
-        r, theta, phi = cart2polar(pos.x, pos.y, pos.z)
         sat.pos = pos
+        sat.geopos = [x for x in cart2geo(pos[0], pos[1], pos[2])]
 
         return sat
 
     def orbit(self, time_limit=100000, run_rate=1):
-
         t = 0
         dt = 1
-        positions = {}
         orbit = []
         curr_positions = []
         pathLengths = []
@@ -145,7 +137,6 @@ class Phase():
             pos = sat.pos
             curr_positions.append([pos.x, pos.y, pos.z])
             orbit.append([t,[pos.x, pos.y, pos.z]])
-        positions[str(t)] = curr_positions
         t=t+dt
         with open('data/'+str(int(self.altitude/1E3))+'/curr_positions.pck', 'wb') as f:
             pck.dump([t,curr_positions], f)
@@ -162,11 +153,8 @@ class Phase():
                 curr_positions.append([sat.pos.x, sat.pos.y, sat.pos.z])
                 orbit.append([t,[sat.pos.x, sat.pos.y, sat.pos.z]])
 
-            positions[str(t)] = curr_positions
             with open('data/'+str(int(self.altitude/1E3))+'/curr_positions.pck', 'wb') as f:
                 pck.dump([t,curr_positions], f)
-            with open('data/'+str(int(self.altitude/1E3))+'/positions.pck', 'wb') as f:
-                pck.dump(positions, f)
 
             # Graph, nodes = createNetworkGraph(self, t)
             # edges = plot_3d_edges(nodes, Graph, phasenum)
@@ -189,11 +177,11 @@ class Phase():
 
             time.sleep(1/speed)
             t=t+dt
-            if t%1000==0:
-                print(t)    
+            # if t%1000==0:
+            #     print(t)    
             if t > time_limit:
                 break
 
-        with open('data/'+str(int(self.altitude/1E3))+'/orbit.pck', 'wb') as f:
-            pck.dump(orbit, f)
+        # with open('data/'+str(int(self.altitude/1E3))+'/orbit.pck', 'wb') as f:
+        #     pck.dump(orbit, f)
         print('files saved')

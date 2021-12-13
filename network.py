@@ -5,7 +5,7 @@ import pickle as pck
 import numpy as np
 import matplotlib.pyplot as plt
 from path_utils import plotPathgeo
-from sim_utils import find_sat, fetch_locs, fetch_curr, fetch_cart, calcDistanceBetween, Phases, colourdict, Locations, findrange
+from sim_utils import find_sat, fetch_curr, fetch_cart, calcDistanceBetween, Phases, colourdict, Locations, findrange
 import time as tm
 from copy import deepcopy
 import string
@@ -75,7 +75,7 @@ def onePlot(loc1, loc2, time):
                     ))
 
     for phasenum in range(1,2):
-        longitudes, latitudes = fetch_locs(phasenum, time)
+        longitudes, latitudes, _ = fetch_curr(phasenum)
         fig.add_trace(go.Scattermapbox(lon=longitudes, lat=latitudes,
                         name="frame",
                         mode="markers",
@@ -122,7 +122,7 @@ def plotEdges(G, time=0):
                     width = 1400
                     ))
     for phasenum in range(1,2):
-        longitudes, latitudes = fetch_locs(phasenum, time)
+        longitudes, latitudes, _ = fetch_curr(phasenum)
         fig.add_trace(go.Scattergeo(lon=longitudes, lat=latitudes,
                         name="frame",
                         mode="markers",

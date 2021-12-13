@@ -26,6 +26,8 @@ lamp = vp.local_light(pos=vp.vector(-1E10,1E10,-1E10),color=vp.color.white)
 
 ######### PHYSICAL PARAMETER SETUP #########
 earth = vp.sphere(canvas=scene, pos=vp.vector(0,0,0), radius = 6.37E6, texture = vp.textures.earth)
+earth.rotate(math.pi, axis=vp.vec(0,1,0))
+
 earth.mass = 6E24
 G = 6.673E-11
 current_orbit = []
@@ -38,14 +40,9 @@ for theta in np.arange(0,360,1):
 c = vp.curve(color=vp.color.blue, radius=100E2)
 [c.append(x) for x in equator]
 
-
-
 #All LEO satellites
-# phase_sats = []
-# # phasenums=3
-# for phasenum in range(1,int(args.phasenums)+1):        
-#     phase_sats.append(phase(phasenum, earth=earth, scene=scene))
 
+# Initialise Phase 1 class with the following features
 phase1 = Phase(phasenum=1,
                 # On which canvas and around which object is the Phase plotted
                 scene=scene,
@@ -57,16 +54,10 @@ phase1 = Phase(phasenum=1,
                 inclination = Phases['Inclination'][0],
                 altitude = Phases['Altitude'][0])
 
+# Plot the phase
 phase1.phase()
-phase1.orbit()
-# for i in phase_sats:
-#     if args.getGraphs == 'ON':
-#         threading.Thread(target=orbit, args=(i, 1, int(args.time_limit))).start()
- 
-#     else:
-#         threading.Thread(target=orbit, args=(i, 1, int(args.time_limit))).start()
-
-
+# Orbit the satellites in the phase
+# phase1.orbit(run_rate=speed)
 
 
 
