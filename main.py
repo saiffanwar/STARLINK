@@ -57,7 +57,7 @@ phase1 = Phase(phasenum=1,
 # Plot the phase
 phase1.phase()
 # Orbit the satellites in the phase
-# phase1.orbit(run_rate=speed)
+phase1.orbit(run_rate=speed)
 
 
 

@@ -10,18 +10,27 @@ colourdict = {1 : ['red', [255, 0, 0] ],
                 5: ['hotpink', [255, 105, 180]]}
 
 # FeatureDict = pck.load(open('data/simFeatures.pck', 'rb'))
-FeatureDict = {'Phase Features': {'Planes': [1], 
-                                    'Sats per plane': [1], 
-                                    'Inclination': [70], 
-                                    'Altitude': [1150000], 
-                                    'Offset': [0]}, 
-                'Speed': 1000}
+FeatureDict = {'Phase Features': {'Planes': [10], 
+                                    'Sats per plane': [10], 
+                                    'Inclination': [53], 
+                                    'Altitude': [550E3], 
+                                    'Offset': [6]}, 
+                'Speed': 10}
 Phases = FeatureDict['Phase Features']
 speed = FeatureDict['Speed']
 earth_radius = 6.37E6
-
+earth_circumference = 40075E3
 # calculates features for the phase depending on the altitude.
-Phases['max comms range'] = [(np.sqrt((((earth_radius+10E3)+Phases['Altitude'][i])**2) - ((earth_radius+10E3)**2)))*2 for i in range(len(Phases['Altitude']))]
+
+def calcVisibilityRadius(altitude):
+    theta = math.acos(earth_radius/(earth_radius+altitude))
+    visibilityRadius = (theta*earth_circumference)/(2*math.pi)
+    return visibilityRadius
+
+Phases['Visibility Radius'] = [calcVisibilityRadius(x) for x in Phases['Altitude']]
+
+Phases['max comms range'] = [(np.sqrt(((earth_radius+x)**2)-(x**2))) for x in Phases['Altitude']]
+
 Phases['max ground reach'] = [Phases['Altitude'][i]*math.tan(rad(50))*3 for i in range(len(Phases['Altitude']))]
 
 # Some popular locations defined by geographical coordinates
@@ -30,6 +39,9 @@ Locations = {'LDN': [-0.13, 51.5],
             'NYC': [-74.0, 40.7], 
             'SIN': [103.8, 1.4],
             'SFO': [-122.4, 37.8],
+            'Helmos': [[22.198], [37.9855]],
+            'Sxoinakas': [[24.8981], [35.2119]],
+            'Holomondas': [[23.5060], [40.3419]]
             }
 
 phasenumPos = {}

@@ -54,6 +54,7 @@ class Phase():
         self.PhaseSats = []
 
     def plane(self, init_sat, period, plane_number):
+        # print('Period (Hours): ', period/3600)
         plane_sats = []
         offset = self.phase_offset/self.no_of_planes * (period/self.sats_per_plane)
         force_gravity = vector(0,0,0)
@@ -82,7 +83,7 @@ class Phase():
         for satnum, j in list(enumerate(positions)):
             pos = j[0]
             sat = plot_satellite(j[0], self.scene, j[1], colourdict[self.phasenum][1])
-            curve(vec(0,0,0), j[0])
+            # curve(vec(0,0,0), j[0])
             sat.geopos = [x for x in cart2geo(coords[0], coords[1], coords[2])]
             plane_sats.append(sat)
             sat.id = [plane_number, satnum]
@@ -120,7 +121,7 @@ class Phase():
         sat.velocity=sat.velocity+sat.acceleration*dt
         pos =sat.pos+sat.velocity*dt
         sat.pos = pos
-        sat.geopos = [x for x in cart2geo(pos[0], pos[1], pos[2])]
+        sat.geopos = [x for x in cart2geo(pos.x, pos.y, pos.z)]
 
         return sat
 
