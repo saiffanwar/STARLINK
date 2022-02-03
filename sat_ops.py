@@ -12,14 +12,15 @@ import threading
 from geometry import rad, deg, cart2geo, cart2polar, polar2cart
 # from sim_utils import Phases, colourdict, speed, calcGCR
 import pickle as pck
-from network import createNetworkGraph, calcPath, plotShortestPath, plot_3d_edges
+
+import csv
 # from graphcomp import compute_graphs
 # number of dp of accuracy for satellite postion. Higher dp leads to higher accuracy but slower build time
 precision = -1
 G = 6.673E-11
 
 
-def plot_satellite(coords, scene, velocity=0, rgb=[255, 0, 0]):
+def plot_satellite(coords, scene, velocity=0, rgb=[255, 0, 0], time=0):
     x, y, z = coords
     satellite = sphere(canvas=scene, pos=vector(x,y,z), radius = 1000E2, color=vector(rgb[0]/255, rgb[1]/255, rgb[2]/255))
     satellite.mass = 250
@@ -115,33 +116,42 @@ class Phase():
         with open('data/'+str(int(self.altitude/1E3))+'/curr_positions.pck', 'wb') as f:
             pck.dump([t,all_initial_pos], f)
 
-    def new_pos(self, sat, dt):
+    def new_pos(self, sat, dt, time):
         force_gravity = -G*self.earth.mass*sat.mass/(mag(sat.pos-self.earth.pos)**2)*norm(sat.pos-self.earth.pos)
         sat.acceleration = force_gravity/sat.mass
         sat.velocity=sat.velocity+sat.acceleration*dt
         pos =sat.pos+sat.velocity*dt
         sat.pos = pos
-        sat.geopos = [x for x in cart2geo(pos.x, pos.y, pos.z)]
+        sat.geopos = [x for x in cart2geo(pos.x, pos.y, pos.z, time=time)]
 
         return sat
-
-    def orbit(self, time_limit=100000, run_rate=1):
+# 2.592E6
+    def orbit(self, time_limit=2.592E6, run_rate=1):
         t = 0
-        dt = 1
+        dt = 10
         orbit = []
         curr_positions = []
         pathLengths = []
         oldedges = []
         all_sats = np.array(self.PhaseSats).flatten()
         for i, sat in list(enumerate(all_sats)):
-            self.new_pos(sat, dt)
+            self.new_pos(sat, dt, t)
             pos = sat.pos
             curr_positions.append([pos.x, pos.y, pos.z])
             orbit.append([t,[pos.x, pos.y, pos.z]])
         t=t+dt
         with open('data/'+str(int(self.altitude/1E3))+'/curr_positions.pck', 'wb') as f:
             pck.dump([t,curr_positions], f)
-
+        
+        import string
+        m,n = 10,10
+        satnames = []
+        letters = string.ascii_letters
+        level = letters[0:m]
+        for l in level:
+            for i in range(1, n + 1):
+               satnames.append(l+str(i))
+        geopos = []
 
         while True:
             self.earth.rotate(rad(1/240), axis=vec(0,1,0))
@@ -149,11 +159,14 @@ class Phase():
             rate(100*len(self.PhaseSats)*run_rate)
             curr_positions = []
             all_sats = np.array(self.PhaseSats).flatten()
-            for i, sat in list(enumerate(all_sats)):
-                self.new_pos(sat, dt)
+            tempdict = {'Time Elapsed': t}
+            for satdata, name in list(zip(enumerate(all_sats), satnames)):
+                i, sat = satdata
+                self.new_pos(sat, dt, t)
                 curr_positions.append([sat.pos.x, sat.pos.y, sat.pos.z])
                 orbit.append([t,[sat.pos.x, sat.pos.y, sat.pos.z]])
-
+                tempdict[name] = sat.geopos
+            geopos.append(tempdict)
             with open('data/'+str(int(self.altitude/1E3))+'/curr_positions.pck', 'wb') as f:
                 pck.dump([t,curr_positions], f)
 
@@ -176,13 +189,23 @@ class Phase():
             #     pck.dump(pathLengths, f)
             # time.sleep(1)
 
-            time.sleep(1/speed)
+            # time.sleep(1/speed)
             t=t+dt
-            # if t%1000==0:
-            #     print(t)    
+            if t%1000==0:
+                print(t)    
             if t > time_limit:
                 break
 
         # with open('data/'+str(int(self.altitude/1E3))+'/orbit.pck', 'wb') as f:
         #     pck.dump(orbit, f)
+        csv_columns = ['Time Elapsed']
+        [csv_columns.append(x) for x in satnames]
+
+        with open('GeoPositions.csv', 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            for data in geopos:
+                writer.writerow(data)
+        with open('GeoPositions.pck', 'wb') as file:
+            pck.dump(geopos, file)
         print('files saved')
