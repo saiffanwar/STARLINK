@@ -9,7 +9,7 @@ from vpython import *
 import numpy as np
 import time
 import threading
-from geometry import rad, deg, cart2geo, cart2polar, polar2cart
+from geometry import rad, deg, cart2geo, cart2polar, polar2cart, display_time
 # from sim_utils import Phases, colourdict, speed, calcGCR
 import pickle as pck
 
@@ -126,7 +126,8 @@ class Phase():
 
         return sat
 # 2.592E6
-    def orbit(self, time_limit=2.592E6, run_rate=1):
+    def orbit(self, time_limit=14515200, run_rate=1):
+        timeStartingOrbit = time.time()
         t = 0
         dt = 10
         orbit = []
@@ -191,8 +192,10 @@ class Phase():
 
             # time.sleep(1/speed)
             t=t+dt
-            if t%1000==0:
-                print(t)    
+            if t%5000==0:
+                print('Time of Orbiting: ', display_time(t, 4))
+                print('Orbital Simulation Time Elapsed: ', display_time(time.time() - timeStartingOrbit))
+                print('-----------------\n')   
             if t > time_limit:
                 break
 
@@ -201,11 +204,11 @@ class Phase():
         csv_columns = ['Time Elapsed']
         [csv_columns.append(x) for x in satnames]
 
-        with open('GeoPositions.csv', 'w') as csvfile:
+        with open('GeoPositions24weeks.csv', 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
             writer.writeheader()
             for data in geopos:
                 writer.writerow(data)
-        with open('GeoPositions.pck', 'wb') as file:
+        with open('GeoPositions24weeks.pck', 'wb') as file:
             pck.dump(geopos, file)
         print('files saved')
